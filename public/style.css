@@ -1,0 +1,438 @@
+/* Background */
+body {
+  font-family: 'Poppins', 'Prompt', sans-serif;
+  background-image: url('./picture/image.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* ปรับแต่ง Modal */
+#date-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 25px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  z-index: 1001;
+  text-align: center;
+}
+
+/* Input แบบ Flatpickr */
+#date-picker {
+  width: 200px;
+  padding: 10px;
+  font-size: 16px;
+  text-align: center;
+  border: 2px solid #007bff;
+  border-radius: 5px;
+}
+
+/* ปรับแต่ง Modal */
+#date-modal-new {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 25px;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  z-index: 1001;
+  text-align: center;
+}
+
+/* Input แบบ Flatpickr */
+#date-picker-new {
+  width: 200px;
+  padding: 10px;
+  font-size: 16px;
+  text-align: center;
+  border: 2px solid #007bff;
+  border-radius: 5px;
+}
+
+.logo {
+  position: absolute;
+  top: 5%;
+  /* ปรับระยะห่างจากขอบบน */
+  left: 3%;
+  /* ปรับระยะห่างจากขอบซ้าย */
+  z-index: 1000;
+  /* ทำให้โลโก้อยู่เหนือองค์ประกอบอื่น */
+}
+
+.logo img {
+  width: 30%;
+  /* ปรับขนาดโลโก้ */
+  height: auto;
+  border-radius: 100%;
+}
+
+.billboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* จัดให้อยู่กึ่งกลาง */
+
+
+  width: 60%;
+  max-width: 1200px;
+  height: auto;
+  min-height: 150px;
+
+  gap: 20px;
+  /* เพิ่มระยะห่างระหว่างกล่อง */
+
+  padding: 10px;
+  margin: 20px 0 20px auto;
+  /* ชิดขวา */
+  background-color: rgb(19, 120, 7);
+  border-radius: 32px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  /* เงาเบา ๆ */
+}
+
+.parent-container {
+  display: block;
+  margin: 0 auto 0 0;
+  /* ขยับไปชิดซ้าย */
+}
+
+.letter {
+  display: flex;
+  /* ทำให้คล้ายปุ่ม */
+  font-size: 18px;
+  /* ปรับขนาดตัวอักษร */
+  font-weight: bold;
+  /* ทำให้ตัวอักษรหนา */
+  color: rgb(243, 247, 242);
+  /* เปลี่ยนสีตัวอักษร */
+
+  padding: 10px 20px;
+  /* ปรับระยะห่างภายใน */
+  border-radius: 32px;
+  /* ทำให้ขอบมน */
+  text-decoration: none;
+  /* ลบขีดเส้นใต้ */
+  float: left;
+  /* จัดไปทางซ้าย */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+  /* เงาเบา ๆ */
+  transition: background-color 0.3s, transform 0.2s;
+  /* เพิ่มเอฟเฟกต์ */
+
+}
+
+.containers {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  /* จัดเรียง container แบบแนวนอน */
+  width: 100%;
+  /* ให้เต็ม billboard */
+  gap: 20px;
+  /* ปรับระยะห่างระหว่างกล่อง */
+}
+
+.container {
+  flex: 1;
+  width: 10%;
+  min-height: 140px;
+  background-color: #27b827;
+  text-align: center;
+  padding: 30px;
+  border-radius: 32px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  /* เงาเบา ๆ */
+}
+
+
+.chart {
+  width: 100%;
+  min-height: 350px;
+  /* ปรับขนาดตามต้องการ */
+  background-color: white;
+  /* ตัวอย่างสีพื้นหลัง */
+  flex-direction: column;
+  /* จัดเรียงเป็นแนวตั้ง */
+  border-radius: 32px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#date-display {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  /* เพิ่มช่องว่างด้านล่างของวันที่ */
+}
+
+#chart-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  /* จัดกราฟให้อยู่กึ่งกลาง */
+  align-items: center;
+  margin-bottom: 20px;
+  /* เพิ่มช่องว่างก่อนปุ่ม */
+}
+
+#chart-container-new {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  /* จัดกราฟให้อยู่กึ่งกลาง */
+  align-items: center;
+  margin-bottom: 20px;
+  /* เพิ่มช่องว่างก่อนปุ่ม */
+}
+
+#chart-container canvas {
+  max-width: 100%;
+  height: auto;
+ 
+}
+
+#chart-container-new canvas {
+  max-width: 100%;
+  height: auto;
+
+}
+
+.chart button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.chart button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.icon {
+  display: flex;
+  gap: 20px;
+  /* เพิ่มระยะห่างระหว่างไอคอน */
+  margin-top: 20px;
+  /* เพิ่มระยะห่างจาก .chart */
+  padding: 10px;
+  margin: 20px auto 20px 0; 
+  /* ชิดซ้าย */
+  
+
+}
+
+.icon a {
+  font-size: 24px;
+  /* ขนาดไอคอน */
+  color: #333;
+  /* สีไอคอน */
+  text-decoration: none;
+  /* เอาขีดเส้นใต้ออก */
+  transition: transform 0.2s, color 0.3s;
+  /* เอฟเฟกต์ hover */
+}
+
+.icon a:hover {
+  color: #007bff;
+  /* เปลี่ยนสีเมื่อ hover */
+  transform: scale(1.2);
+  /* ขยายไอคอนเมื่อ hover */
+}
+
+.icon img {
+  width: 60px;
+  /* ปรับขนาดรูป */
+  height: 60px;
+  object-fit: contain;
+  /* ป้องกันภาพยืด */
+  background-color: lightgray;
+  /* ตัวอย่างสีพื้นหลัง */
+  border-radius: 100%;
+  transition: transform 0.2s, opacity 0.3s;
+  /* เอฟเฟกต์ hover */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  /* เงาเบา ๆ */
+}
+
+.icon img:hover {
+  transform: scale(1.2);
+  /* ขยายไอคอนเมื่อ hover */
+  opacity: 0.8;
+  /* ลดความเข้มของรูปเมื่อ hover */
+}
+
+
+/* From Uiverse.io by ilkhoeri */
+.action_has {
+  --color: 0 0% 60%;
+  --color-has: 211deg 100% 48%;
+  --sz: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(var(--sz) * 2.5);
+  width: calc(var(--sz) * 2.5);
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 0.0625rem solid hsl(var(--color));
+}
+
+.has_saved:hover {
+  border-color: hsl(var(--color-has));
+}
+
+.has_liked:hover svg,
+.has_saved:hover svg {
+  color: hsl(var(--color-has));
+}
+
+.has_liked svg,
+.has_saved svg {
+  overflow: visible;
+  height: calc(var(--sz) * 1.75);
+  width: calc(var(--sz) * 1.75);
+  --ease: cubic-bezier(0.5, 0, 0.25, 1);
+  --zoom-from: 1.75;
+  --zoom-via: 0.75;
+  --zoom-to: 1;
+  --duration: 1s;
+}
+
+.has_saved:hover path[data-path="box"] {
+  transition: all 0.3s var(--ease);
+  animation: has-saved var(--duration) var(--ease) forwards;
+  fill: hsl(var(--color-has) / 0.35);
+}
+
+.has_saved:hover path[data-path="line-top"] {
+  animation: has-saved-line-top var(--duration) var(--ease) forwards;
+}
+
+.has_saved:hover path[data-path="line-bottom"] {
+  animation: has-saved-line-bottom var(--duration) var(--ease) forwards,
+    has-saved-line-bottom-2 calc(var(--duration) * 1) var(--ease) calc(var(--duration) * 0.75);
+}
+
+@keyframes has-saved-line-top {
+  33.333% {
+    transform: rotate(0deg) translate(1px, 2px) scale(var(--zoom-from));
+    d: path("M 3 5 L 3 8 L 3 8");
+  }
+
+  66.666% {
+    transform: rotate(20deg) translate(2px, -2px) scale(var(--zoom-via));
+  }
+
+  99.999% {
+    transform: rotate(0deg) translate(0px, 0px) scale(var(--zoom-to));
+  }
+}
+
+@keyframes has-saved-line-bottom {
+  33.333% {
+    transform: rotate(0deg) translate(1px, 2px) scale(var(--zoom-from));
+    d: path("M 17 20 L 17 13 L 7 13 L 7 20");
+  }
+
+  66.666% {
+    transform: rotate(20deg) translate(2px, -2px) scale(var(--zoom-via));
+  }
+
+  99.999% {
+    transform: rotate(0deg) translate(0px, 0px) scale(var(--zoom-to));
+    d: path("M 17 21 L 17 21 L 7 21 L 7 21");
+  }
+}
+
+@keyframes has-saved-line-bottom-2 {
+  from {
+    d: path("M 17 21 L 17 21 L 7 21 L 7 21");
+  }
+
+  to {
+    transform: rotate(0deg) translate(0px, 0px) scale(var(--zoom-to));
+    d: path("M 17 20 L 17 13 L 7 13 L 7 20");
+    fill: rgb(255, 255, 255);
+  }
+}
+
+@keyframes has-saved {
+  33.333% {
+    transform: rotate(0deg) translate(1px, 2px) scale(var(--zoom-from));
+  }
+
+  66.666% {
+    transform: rotate(20deg) translate(2px, -2px) scale(var(--zoom-via));
+  }
+
+  99.999% {
+    transform: rotate(0deg) translate(0px, 0px) scale(var(--zoom-to));
+  }
+}
+
+.bill-container {
+  background: white;
+  padding: 20px;
+  width: 300px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.bill-header,
+.energy-header {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fdfcfc;
+  margin-bottom: 10px;
+  text-shadow: 1px 1px 2px rgb(0, 0, 0);
+}
+
+.bill-amount,
+.energy-amount {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ff0404;
+  margin-bottom: 15px;
+  text-shadow: 1px 1px 2px rgb(0, 0, 0);
+}
+
+.bill-year-header {
+  font-size: 22px;
+  font-weight: 600;
+  color: #2600ffca;
+  margin-bottom: 12px;
+  text-shadow: 1px 1px 2px rgba(0, 123, 255, 0.3);
+}
+
+.bill-year-info {
+  font-size: 18px;
+  font-weight: 400;
+  color: #333;
+  line-height: 1.6;
+}
+
+.highlight {
+  font-size: 20px;
+  font-weight: 600;
+  color: #88ff33;
+  text-shadow: 1px 1px 2px rgba(255, 87, 51, 0.4);
+}
