@@ -3,14 +3,19 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+require('dotenv').config();
 
+
+username_mongo = process.env.USER_MONGO;
+password_mongo = process.env.PASS_MONGO;
 
 
 const app = express()
 app.use(bodyParser.json());
 app.use(cors({ origin: '*' }));
 
-const mongoUri = "mongodb+srv://nippit62:ohm0966477158@testing.hgxbz.mongodb.net/?retryWrites=true&w=majority";
+
+const mongoUri = `mongodb+srv://${username_mongo}:${password_mongo}@testing.hgxbz.mongodb.net/?retryWrites=true&w=majority`;
 
 mongoose.connect(mongoUri).then(() => {
     console.log("Connected to MongoDB Atlas");
