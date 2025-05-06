@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Momay Resort</title>
+    <link rel="stylesheet" href="./style.css">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+    <a href="#" class="logo">
+        <img src="./picture/momay.png" alt="Logo">
+    </a>
+
+    <div class="billboard">
+        <div class="parent-container">
+            <a href="#" class="letter">Resort</a>
+        </div>
+        <div class="containers">
+            <div class="container" id="billBox">
+                <div id="billDetails">กำลังโหลด...</div>
+            </div>
+            <div class="container container-month" id="monthBox">
+                <div id="billmonthDetails">กำลังโหลด...</div>
+            </div>
+            <div class="container container-year" id="yearBox">
+                <div id="billyearDetails">กำลังโหลด...</div>
+            </div>
+        </div>
+
+        <div class="chart" id="chart_px_pm3250">
+            <!-- วันที่แสดงตรงกลางด้านบน -->
+            <div id="date-display">Selected Date: Loading...</div>
+            <!-- กราฟอยู่ตรงกลาง -->
+            <div id="chart-container">
+                <canvas id="energy-chart"></canvas>
+            </div>
+            <!-- ปุ่มต่างๆ อยู่ด้านล่าง -->
+            <div>
+                <button onclick="openDatePicker()">Historical Charts</button>
+                <button onclick="startRealTimeChart()">Realtime Chart</button>
+            </div>
+
+        </div>
+
+        <div class="icon">
+            <a href="#"><img src="./picture/kwang_logo2.png" alt="Home"></a>
+            <!-- From Uiverse.io by ilkhoeri -->
+            <button id="export-button" class="action_has has_saved" aria-label="save" type="button">
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                    stroke-linejoin="round" stroke-linecap="round" stroke-width="2" viewBox="0 0 24 24"
+                    stroke="currentColor" fill="none">
+                    <path d="m19,21H5c-1.1,0-2-.9-2-2V5c0-1.1.9-2,2-2h11l5,5v11c0,1.1-.9,2-2,2Z" stroke-linejoin="round"
+                        stroke-linecap="round" data-path="box"></path>
+                    <path d="M7 3L7 8L15 8" stroke-linejoin="round" stroke-linecap="round" data-path="line-top"></path>
+                    <path d="M17 20L17 13L7 13L7 20" stroke-linejoin="round" stroke-linecap="round"
+                        data-path="line-bottom">
+                    </path>
+                </svg>
+            </button>
+
+
+            <!-- Modal เลือกวันที่ -->
+            <div id="date-modal">
+                <label for="date-picker">เลือกวันที่:</label>
+                <input id="date-picker" type="text" placeholder="Select Date" readonly>
+
+                <div style="margin-top: 15px;">
+                    <button onclick="fetchAndShowChart()">OK</button>
+                    <button onclick="closeDatePicker()">Cancel</button>
+                </div>
+            </div>
+
+            <!-- <a href="https://www.canva.com/design/DAGiCuI-dZU/bHfsCzHDEzS4qEX8kieKUA/view?utm_content=DAGiCuI-dZU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=he8d6747032"
+                target="_blank" rel="noopener noreferrer"><img src="./picture/whiteboard.png" alt="present"></a> -->
+
+            <!-- Flatpickr JavaScript -->
+            <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+        </div>
+    </div>
+    <script>
+
+        document.getElementById("export-button").addEventListener("click", exportToCSV);
+
+        async function exportToCSV() {
+            try {
+                const [daily, monthly, yearly] = await Promise.all([
+                    fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/daily-bill/sensorResort')
+                        .then(res => res.json()),
+                    fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/monthly-bill/sensorResort')
+                        .then(res => res.json()),
+                    fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/yearly-bill/sensorResort')
+                        .then(res => res.json())
+                ]);
+
+                const csvData = [
+                    ["Type", "Date", "Energy (kWh)", "Electricity Bill (Baht)"],
+                    ["Daily", daily.date || "-", daily.total_energy_kwh || "-", daily.electricity_bill || "-"],
+                    ["Monthly", monthly.month || "-", monthly.total_energy_kwh || "-", monthly.electricity_bill || "-"],
+                    ["Yearly", yearly.year || "-", yearly.total_energy_kwh || "-", yearly.electricity_bill || "-"]
+                ];
+
+                const csvContent = csvData.map(e => e.join(",")).join("\n");
+
+                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "energy_summary.csv";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                console.log("CSV exported successfully.");
+
+            } catch (error) {
+                console.error("Error exporting CSV:", error);
+                alert("ไม่สามารถส่งออกข้อมูลได้ กรุณาลองใหม่");
+            }
+        }
+
+        function openDatePicker() {
+            document.getElementById("date-modal").style.display = "block";
+            setTimeout(() => {
+                document.getElementById("date-picker").click(); // เปิด Date Picker อัตโนมัติ
+            }, 100);
+        }
+
+        function closeDatePicker() {
+            document.getElementById("date-modal").style.display = "none";
+        }
+
+        function fetchAndShowChart() {
+            let selectedDate = document.getElementById("date-picker").value;
+            if (selectedDate) {
+                alert("เลือกวันที่: " + selectedDate); // สามารถใช้ค่าตรงนี้ไปโหลดข้อมูลกราฟได้
+                closeDatePicker();
+            } else {
+                alert("กรุณาเลือกวันที่ก่อนกด OK!");
+            }
+        }
+
+        // กำหนด Flatpickr
+        flatpickr("#date-picker", {
+            dateFormat: "Y-m-d", // แสดงวันที่เป็น YYYY-MM-DD
+            defaultDate: new Date(), // ตั้งค่าค่าเริ่มต้นเป็นวันปัจจุบัน
+            locale: "th",
+        });
+
+
+        // กำหนดตัวแปรสถานะและเก็บค่าดั้งเดิมของ billDetails
+        let isDetailShown = false;
+        // Event click สำหรับกล่องใบเสร็จ (Bill)
+        document.getElementById("billBox").addEventListener("click", function () {
+            let billDetails = document.getElementById("billDetails");
+
+            if (isDetailShown) {
+                console.log("Showing static bill details...");
+                // ถ้าคลิกอีกครั้ง ให้กลับไปแสดงค่าดั้งเดิม
+                billDetails.innerHTML =
+                    "รายละเอียดบิลรายวัน <br>" +
+                    "ค่าไฟต่อ 1 วัน เท่ากับ <br> " +
+                    "กิโลวัตต์ไฟฟ้าที่ใช้ x 24 ชั่วโมง <br>" + "x ค่าไฟต่อ 1 หน่วย (4.4 บาท)<br>";
+            } else {
+                // เรียกฟังก์ชัน fetchDailyBill() เพื่อดึงข้อมูลบิล
+                fetchDailyBill();
+            }
+            // สลับสถานะ
+            isDetailShown = !isDetailShown;
+        });
+        // กำหนดตัวแปรสถานะและเก็บค่าดั้งเดิมของ billDetails
+        let isDetailmonthShown = false;
+        // Event click สำหรับกล่องใบเสร็จ (Bill)
+        document.getElementById("monthBox").addEventListener("click", function () {
+            let billmonthDetails = document.getElementById("billmonthDetails");
+            if (isDetailmonthShown) {
+                console.log("Showing static bill details...");
+                // ถ้าคลิกอีกครั้ง ให้กลับไปแสดงค่าดั้งเดิม
+                billmonthDetails.innerHTML =
+                    "รายละเอียดบิลรายเดือน <br>" +
+                    "ค่าไฟต่อ 1 เดือน เท่ากับ <br> " +
+                    "กิโลวัตต์ไฟฟ้าที่ใช้ x 24 ชั่วโมง <br>" + "x ค่าไฟต่อ 1 หน่วย (4.4 บาท)<br>x 30 วัน<br>";
+            } else {
+                // เรียกฟังก์ชัน fetchDailyBill() เพื่อดึงข้อมูลบิล
+                fetchMonthBill();
+            }
+            // สลับสถานะ
+            isDetailmonthShown = !isDetailmonthShown;
+        });
+        // กำหนดตัวแปรสถานะและเก็บค่าดั้งเดิมของ billDetails
+        let isDetailyearShown = false;
+        // Event click สำหรับกล่องใบเสร็จ (Bill)
+        document.getElementById("yearBox").addEventListener("click", function () {
+            let billyearDetails = document.getElementById("billyearDetails");
+            if (isDetailyearShown) {
+                console.log("Showing static bill details...");
+                // ถ้าคลิกอีกครั้ง ให้กลับไปแสดงค่าดั้งเดิม
+                billyearDetails.innerHTML =
+                    "รายละเอียดบิลรายปี <br>" +
+                    "ค่าไฟต่อ 1 ปี เท่ากับ <br> " +
+                    "กิโลวัตต์ไฟฟ้าที่ใช้ x 24 ชั่วโมง <br>" + "x ค่าไฟต่อ 1 หน่วย (4.4 บาท)<br>" + " x 30 วัน x 12 เดือน<br>";
+            } else {
+                // เรียกฟังก์ชัน fetchDailyBill() เพื่อดึงข้อมูลบิล
+                fetchYearBill();
+            }
+            // สลับสถานะ
+            isDetailyearShown = !isDetailyearShown;
+        });
+
+        // ฟังก์ชันสำหรับตั้งค่าหรือแสดงวันที่
+        function showDate(isRealtime) {
+            const dateElement = document.getElementById("date-display");
+            const datePicker = document.getElementById("date-picker");
+            let displayDate;
+
+            if (isRealtime) {
+                const today = new Date();
+                displayDate = today.toISOString().split('T')[0]; // รูปแบบ YYYY-MM-DD
+            } else {
+                displayDate = datePicker.value || "Please select a date";
+            }
+
+            dateElement.textContent = `Date : ${displayDate}`;
+        }
+
+        async function fetchMonthBill() {
+            try {
+                console.log("Fetching daily bill data...");
+
+                const response = await fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/monthly-bill/sensorResort');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // อ่าน body ของ response ครั้งเดียว
+                const billData = await response.json();
+
+                console.log("Daily Bill Data:", billData);
+
+                // แสดงผลข้อมูลในหน้าเว็บ
+                document.getElementById("billmonthDetails").innerHTML = `
+    <div class="bill-header">Bill Month ${billData.month}</div>
+    <div class="bill-amount">${billData.electricity_bill} Bath</div>
+    <div class="energy-header">Energy Month</div>
+    <div class="energy-amount">${billData.total_energy_kwh} kW</div>
+`;
+
+            } catch (error) {
+                console.error("Error fetching Month bill:", error);
+                document.getElementById("billmonthDetails").textContent = "ไม่สามารถโหลดข้อมูลได้";
+            }
+        }
+
+        async function fetchYearBill() {
+            try {
+                console.log("Fetching daily bill data...");
+
+                const response = await fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/yearly-bill/sensorResort');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // อ่าน body ของ response ครั้งเดียว
+                const billData = await response.json();
+
+                console.log("Daily Bill Data:", billData);
+
+                // แสดงผลข้อมูลในหน้าเว็บ
+                document.getElementById("billyearDetails").innerHTML = `
+    <div class="bill-header">Bill Year ${billData.year}</div>
+    <div class="bill-amount">${billData.electricity_bill} Bath</div>
+    <div class="energy-header">Energy Year</div>
+    <div class="energy-amount">${billData.total_energy_kwh} kW</div>
+`;
+
+            } catch (error) {
+                console.error("Error fetching Year bill:", error);
+                document.getElementById("billyearDetails").textContent = "ไม่สามารถโหลดข้อมูลได้";
+            }
+        }
+
+        async function fetchDailyBill() {
+            try {
+                console.log("Fetching daily bill data...");
+
+                const dateInput = document.getElementById('date-picker').value;
+
+                const response = await fetch(`https://asia-northeast1-momay-4a073.cloudfunctions.net/api/daily-bill/sensorResort?date=${dateInput}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // อ่าน body ของ response ครั้งเดียว
+                const billData = await response.json();
+
+                console.log("Daily Bill Data:", billData);
+
+                // แสดงผลข้อมูลในหน้าเว็บ
+                document.getElementById("billDetails").innerHTML = `
+    <div class="bill-header">Bill ${dateInput}</div>
+    <div class="bill-amount">${billData.electricity_bill} Bath</div>
+    <div class="energy-header">Energy Today</div>
+    <div class="energy-amount">${billData.total_energy_kwh} kW</div>
+`;
+
+            } catch (error) {
+                console.error("Error fetching daily bill:", error);
+                document.getElementById("billDetails").textContent = "ไม่สามารถโหลดข้อมูลได้";
+            }
+        }
+
+        fetchDailyBill();
+        fetchMonthBill();
+        fetchYearBill();
+
+
+        function setintervaltime() {
+            setTimeout(() => {
+                fetchDailyBill();
+                fetchMonthBill();
+                fetchYearBill();
+            }, 60000); 
+        }
+
+        // เรียกใช้งานฟังก์ชัน
+        setintervaltime();
+
+
+        function clearRealTimeChart() {
+            if (realTimeInterval) {
+                clearInterval(realTimeInterval);
+                realTimeInterval = null;
+            }
+        }
+
+        async function fetchAndShowChart() {
+            closeDatePicker(); // ปิด Modal เลือกวัน
+            clearRealTimeChart(); // หยุด Real-time Chart ก่อน
+
+            const chartContainer = document.getElementById('chart-container');
+            chartContainer.style.display = 'block';
+
+            createChart(); // สร้างกราฟ (ถ้ายังไม่มี)
+
+            const dateInput = document.getElementById('date-picker').value;
+
+            if (!dateInput) {
+                alert('Please select a date.');
+                return;
+            }
+
+            try {
+                console.log("Fetching data for date:", dateInput);
+
+                // เรียก API เพื่อดึงข้อมูล
+                const response = await fetch(`https://asia-northeast1-momay-4a073.cloudfunctions.net/api/daily-energy/sensorResort?date=${dateInput}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const responseData = await response.json();
+                const data = responseData.data; // เข้าถึงฟิลด์ data
+
+                console.log("Data array for chart:", data);
+
+                // ตรวจสอบข้อมูล
+                if (!data || !Array.isArray(data)) {
+                    console.error("Invalid data format:", data);
+                    alert("No data available for the selected date.");
+                    return;
+                }
+
+                // อัปเดตวันที่
+                showDate(false, dateInput);
+                // ล้างข้อมูลในกราฟ
+                energyChart.data.datasets[0].data = new Array(1440).fill(null);
+
+                // แปลงข้อมูล
+                const newData = new Array(1440).fill(null);
+                data.forEach(entry => {
+                    if (entry.timestamp) {
+                        const [hour, minute] = entry.timestamp.split('T')[1].split(':');
+                        const index = parseInt(hour) * 60 + parseInt(minute);
+                        newData[index] = entry.power;
+                    } else {
+                        console.warn("Missing 'timestamp' field in entry:", entry);
+                    }
+                });
+
+
+                console.log("Transformed data for chart:", newData);
+
+                // อัปเดตข้อมูลในกราฟ
+                energyChart.data.datasets[0].data = newData;
+                energyChart.update();
+                console.log("Chart updated successfully.");
+            } catch (error) {
+                console.error('Error fetching data for selected date:', error);
+                alert('Failed to fetch data for the selected date. Please try again later.');
+            }
+        }
+
+
+        function stopShowChart() {
+            const chartContainer = document.getElementById('chart-container');
+
+            // ทำลายกราฟที่สร้างขึ้นเพื่อเคลียร์หน่วยความจำ
+            if (energyChart) {
+                energyChart.destroy();
+                energyChart = null; // รีเซ็ตตัวแปร
+            }
+        }
+
+
+
+
+        function startRealTimeChart() {
+            if (realTimeInterval) {
+                return; // ถ้าเริ่มแล้ว ไม่ต้องเริ่มใหม่
+            }
+
+            clearRealTimeChart(); // หยุดการทำงานก่อนหน้า (ถ้ามี)
+            stopShowChart()
+            const chartContainer = document.getElementById('chart-container');
+            chartContainer.style.display = 'block';
+            createChart(); // สร้างกราฟ (ถ้ายังไม่มี)
+            // แสดงวันที่ปัจจุบัน
+
+            function clearRealTimeChart() {
+                if (realTimeInterval) {
+                    clearInterval(realTimeInterval);
+                    realTimeInterval = null;
+                }
+            }
+
+            // เริ่มการดึงข้อมูลแบบเรียลไทม์
+            realTimeInterval = setInterval(fetchRealTimeData, 3000);
+        }
+
+        function stopRealTimeChart() {
+
+            if (realTimeInterval) {
+                clearInterval(realTimeInterval); // หยุดการดึงข้อมูลแบบเรียลไทม์
+                realTimeInterval = null;
+            }
+
+        }
+
+        function startRealTimeUpdates() {
+            setInterval(() => {
+                fetchRealTimeData();
+            }, 60000); // ดึงข้อมูลใหม่ทุก 1 นาที
+        }
+
+
+        let energyChart; // อ้างอิงกราฟที่ถูกสร้าง
+        let realTimeInterval; // ใช้เก็บ interval สำหรับ real-time updates
+
+        function createChart() {
+            if (energyChart) return; // หากมีกราฟอยู่แล้ว ให้ใช้กราฟเดิม
+
+            const ctx = document.getElementById('energy-chart').getContext('2d');
+            energyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: 1440 }, (_, i) => {
+                        const hours = Math.floor(i / 60).toString().padStart(2, '0');
+                        const minutes = (i % 60).toString().padStart(2, '0');
+                        return `${hours}:${minutes}`; // 00:00 ถึง 23:59
+                    }),
+                    datasets: [{
+                        label: 'Energy Grid Import (kW)',
+                        data: new Array(1440).fill(null), // ค่าเริ่มต้นเป็น null สำหรับ 1440 นาที
+                        borderColor: 'rgba(255, 165, 0, 1)', // สีส้ม
+                        backgroundColor: 'rgba(255, 165, 0, 0.2)', // สีพื้นหลังโปร่งแสง
+                        fill: true,
+                        borderWidth: 0.5, // ความหนาเส้น
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Time (Hours)' },
+                            ticks: {
+                                autoSkip: false, // ปิดการข้ามอัตโนมัติ
+                                rotation: 0, // หมุนข้อความบนแกน X เป็น 0 องศา (ตรง)
+                                align: 'center', // จัดให้อยู่ตรงกลาง (หากจำเป็น)
+                                maxTicksLimit: 24, // จำกัด tick สูงสุด 24 ค่า (1 ชั่วโมง 1 tick)
+                                callback: function (value, index) {
+                                    // แสดงเฉพาะเวลาชั่วโมงเต็ม
+                                    const label = this.getLabelForValue(value);
+
+                                    const hour = parseInt(label.split(':')[0]); // ดึงค่า "ชั่วโมง" ออกมา
+                                    return hour % 3 === 0 && label.endsWith(':00') ? label : '';
+                                }
+
+                            }
+
+                        },
+                        y: {
+                            title: { display: true, text: 'Energy Grid Import (kW)' },
+                            beginAtZero: true // เริ่มที่ 0 บนแกน Y
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true }, // แสดง legend
+                    },
+                    elements: {
+                        line: {
+                            tension: 0.5 // เพิ่มความโค้งให้เส้นกราฟ
+                        },
+                        point: {
+                            radius: 0.09, // ขนาดจุด
+                            hoverRadius: 5, // ขนาดจุดเมื่อ hover
+                        }
+                    }
+                }
+            });
+        }
+
+
+
+        function stopShowChart() {
+            const chartContainer = document.getElementById('chart-container');
+
+            // ซ่อนกราฟ
+            chartContainer.style.display = 'none';
+
+            // ทำลายกราฟที่สร้างขึ้นเพื่อเคลียร์หน่วยความจำ
+            if (energyChart) {
+                energyChart.destroy();
+                energyChart = null; // รีเซ็ตตัวแปร
+            }
+        }
+
+
+        async function fetchRealTimeData() {
+            try {
+                console.log("Fetching data for the latest day...");
+
+                // เรียก API เพื่อดึงข้อมูลสำหรับวันล่าสุด
+                const response = await fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/latest-day-energy/sensorResort');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const responseData = await response.json();
+                const data = responseData.data; // เข้าถึงฟิลด์ data จาก API
+
+                console.log("Data array for chart:", data);
+
+                // ตรวจสอบข้อมูล
+                if (!data || !Array.isArray(data)) {
+                    console.error("Invalid data format:", data);
+                    alert("No data available for the latest day.");
+                    return;
+                }
+
+                // แสดงวันที่ปัจจุบัน
+                showDate(true);
+
+                // ล้างข้อมูลในกราฟ
+                energyChart.data.datasets[0].data = new Array(1440).fill(null);
+
+                // แปลงข้อมูล
+                const newData = new Array(1440).fill(null);
+
+                data.forEach(entry => {
+                    if (entry.timestamp) {
+                        const [hour, minute] = entry.timestamp.split('T')[1].split(':'); // ใช้เวลาจาก API
+                        const index = parseInt(hour) * 60 + parseInt(minute); // คำนวณตำแหน่งใน array
+
+                        if (index < 1440) {
+                            newData[index] = entry.power; // เพิ่มค่าพลังงานในตำแหน่งที่คำนวณได้
+                        } else {
+                            console.warn("Index out of range:", index);
+                        }
+                    } else {
+                        console.warn("Missing 'timestamp' field in entry:", entry);
+                    }
+                });
+
+                console.log("Transformed data for chart:", newData);
+
+                // อัปเดตข้อมูลในกราฟ
+                energyChart.data.datasets[0].data = newData;
+                energyChart.update();
+                console.log("Chart updated successfully.");
+            } catch (error) {
+                console.error('Error fetching real-time data:', error);
+
+            }
+        }
+
+        // <======================================load window================================>
+        // เรียกฟังก์ชันเมื่อหน้าเว็บโหลดเสร็จ
+        window.onload = function () {
+            createChart(); // สร้างกราฟตอนโหลดเว็บ
+            startRealTimeChart(); // เริ่มเรียลไทม์
+            createChartNew(); // สร้างกราฟตอนโหลดเว็บ
+            startRealTimeChartNew(); // เริ่มเรียลไทม์
+
+        };
+
+
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    </script>
+
+
+</body>
+
+</html>

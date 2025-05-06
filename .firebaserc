@@ -1,5 +1,24 @@
 {
   "projects": {
     "default": "momay-4a073"
-  }
+  },
+  "targets": {
+    "momay-4a073": {
+      "hosting": {
+        "momaysukhothai": [
+          "momaysukhothai"
+        ],
+        "momay-4a073": [
+          "momay-4a073"
+        ],
+        "momayResort": [
+          "momayResort"
+        ],
+        "momayresort": [
+          "momayresort"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
