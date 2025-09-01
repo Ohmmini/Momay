@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Momay Resort</title>
+    <title>Momay Hospital</title>
     <link rel="stylesheet" href="./style.css">
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -18,7 +18,7 @@
 
     <div class="billboard">
         <div class="parent-container">
-            <a href="#" class="letter">Wongpanit Sukhothai</a>
+            <a href="#" class="letter">Hospital</a>
         </div>
         <div class="containers">
             <div class="container" id="billBox">
@@ -90,11 +90,11 @@
         async function exportToCSV() {
             try {
                 const [daily, monthly, yearly] = await Promise.all([
-                    fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/daily-bill/sensorResort')
+                    fetch('https://api-kx4r63rdjq-an.a.run.app/daily-bill/sensorHospital')
                         .then(res => res.json()),
-                    fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/monthly-bill/sensorResort')
+                    fetch('https://api-kx4r63rdjq-an.a.run.app/monthly-bill/sensorHospital')
                         .then(res => res.json()),
-                    fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/yearly-bill/sensorResort')
+                    fetch('https://api-kx4r63rdjq-an.a.run.app/yearly-bill/sensorHospital')
                         .then(res => res.json())
                 ]);
 
@@ -233,7 +233,7 @@
             try {
                 console.log("Fetching daily bill data...");
 
-                const response = await fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/monthly-bill/sensorResort');
+                const response = await fetch('https://api-kx4r63rdjq-an.a.run.app/monthly-bill/sensorHospital');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -262,7 +262,7 @@
             try {
                 console.log("Fetching daily bill data...");
 
-                const response = await fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/yearly-bill/sensorResort');
+                const response = await fetch('https://api-kx4r63rdjq-an.a.run.app/yearly-bill/sensorHospital');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -293,7 +293,7 @@
 
                 const dateInput = document.getElementById('date-picker').value;
 
-                const response = await fetch(`https://asia-northeast1-momay-4a073.cloudfunctions.net/api/daily-bill/sensorResort?date=${dateInput}`);
+                const response = await fetch(`https://api-kx4r63rdjq-an.a.run.app/daily-bill/sensorHospital?date=${dateInput}`);
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -362,7 +362,7 @@
                 console.log("Fetching data for date:", dateInput);
 
                 // เรียก API เพื่อดึงข้อมูล
-                const response = await fetch(`https://asia-northeast1-momay-4a073.cloudfunctions.net/api/daily-energy/sensorResort?date=${dateInput}`);
+                const response = await fetch(`https://api-kx4r63rdjq-an.a.run.app/daily-energy/sensorHospital?date=${dateInput}`);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
                 const responseData = await response.json();
@@ -547,7 +547,7 @@
                 console.log("Fetching data for the latest day...");
 
                 // เรียก API เพื่อดึงข้อมูลสำหรับวันล่าสุด
-                const response = await fetch('https://asia-northeast1-momay-4a073.cloudfunctions.net/api/latest-day-energy/sensorResort');
+                const response = await fetch('https://api-kx4r63rdjq-an.a.run.app/latest-day-energy/sensorHospital');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
                 const responseData = await response.json();

@@ -14,8 +14,20 @@
         "momayResort": [
           "momayResort"
         ],
-        "momayresort": [
+        "resort-site": [
           "momayresort"
+        ],
+        "wongpanit-sukhothai": [
+          "wongpanit-sukhothai"
+        ],
+        "momayresident": [
+          "momayresident"
+        ],
+        "momayhospital": [
+          "momayhospital"
+        ],
+        "momayclinic": [
+          "momayclinic"
         ]
       }
     }

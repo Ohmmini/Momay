@@ -34,8 +34,38 @@
       ]
     },
     {
-      "target": "momayresort",
+      "target": "wongpanit-sukhothai",
       "public": "public/site3",
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "target": "momayresident",
+      "public": "public/site4",
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "target": "momayhospital",
+      "public": "public/site5",
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "target": "momayclinic",
+      "public": "public/site6",
       "rewrites": [
         {
           "source": "**",

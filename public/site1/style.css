@@ -93,7 +93,7 @@ body {
   padding: 10px;
   margin: 20px 0 20px auto;
   /* ชิดขวา */
-  background-color: rgb(19, 120, 7);
+  background-color: #14B8A6;
   border-radius: 32px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
   /* เงาเบา ๆ */
@@ -145,7 +145,7 @@ body {
   flex: 1;
   width: 10%;
   min-height: 140px;
-  background-color: #27b827;
+  background-color: #EDF5FF;
   text-align: center;
   padding: 30px;
   border-radius: 32px;
