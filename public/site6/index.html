@@ -1163,6 +1163,53 @@
         flex: 0 0 28px;
       }
 
+      /* สีพื้นหลัง/ขอบของการแจ้งเตือนแต่ละชนิด */
+      .notify-item.item-max {
+        /* MAX = แดงอมชมพู */
+        background: linear-gradient(135deg, rgba(239, 68, 68, .12), rgba(239, 68, 68, .05));
+        border-left: 4px solid #ef4444;
+      }
+
+      .notify-item.item-min {
+        /* MIN = ฟ้า */
+        background: linear-gradient(135deg, rgba(59, 130, 246, .12), rgba(59, 130, 246, .05));
+        border-left: 4px solid #3b82f6;
+      }
+
+      .notify-item.item-peak {
+        /* พลังงานรายวันสูงสุด */
+        background: linear-gradient(135deg, rgba(34, 197, 94, .12), rgba(34, 197, 94, .05));
+        border-left: 4px solid #22c55e;
+      }
+
+      .notify-item.item-anom {
+        /* anomaly อื่น ๆ */
+        background: linear-gradient(135deg, rgba(249, 115, 22, .12), rgba(249, 115, 22, .05));
+        border-left: 4px solid #f97316;
+      }
+
+      /* สีพื้นของกล่องไอคอน */
+      .icon-max {
+        background: linear-gradient(135deg, #ef4444, #fb7185);
+        color: #fff;
+      }
+
+      .icon-min {
+        background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        color: #fff;
+      }
+
+      .icon-peak {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #fff;
+      }
+
+      .icon-anom {
+        background: linear-gradient(135deg, #f97316, #ef4444);
+        color: #fff;
+      }
+
+
       .icon-peak {
         background: linear-gradient(135deg, #22c55e, #16a34a);
         color: #fff;
@@ -1334,6 +1381,11 @@
           </div>
         </div>
 
+        <div id="powerExtremaToday" style="font-size:.9rem;opacity:.8;">
+          Min: <span id="powerMinToday">-</span> kW ·
+          Max: <span id="powerMaxToday">-</span> kW
+        </div>
+
         <div class="metrics-grid">
 
           <div class="metric-card" id="billBox1"
@@ -1462,7 +1514,15 @@
       currentMax: 80,                                // A
       powerSpikePct: 50,                             // เพิ่มขึ้น > % จากค่าเฉลี่ย 5 นาที
       keepLastAlerts: 50,                            // เก็บ log ใน localStorage
-      endpointKey: 'Clinic'                          // ใช้กับคีย์ localStorage ต่อวัน
+      endpointKey: 'Clinic',  // ใช้กับคีย์ localStorage ต่อวัน
+
+      // ▼ ใหม่: แจ้งเตือนค่าสูงสุด/ต่ำสุดของ Power รายวัน
+      powerExtrema: {
+        enabled: true,
+        epsilonKW: 0.005,   // กันเด้งรัว ๆ จากสวิงเล็ก ๆ (เช่น 0.210 ↔ 0.211)
+        seedSilence: true   // true = ไม่เด้งตอน “ค่าแรกของวัน” ถูกบันทึก (กัน spam ตอนเที่ยงคืน)
+      },
+
     };
 
     // ------------------ STATE ------------------
@@ -1516,14 +1576,20 @@
       if (!list) return;
 
       const tKey = todayKey();
-      const todays = inAppAlerts.filter(a => a.dayKey === tKey); // ⬅️ แสดงเฉพาะวันนี้
+      const todays = inAppAlerts.filter(a => a.dayKey === tKey);
+
       list.innerHTML = '';
       todays.forEach(a => {
-        const iconClass = a.type === 'peak' ? 'icon-peak' : 'icon-anom';
+        const iconMap = { max: 'icon-max', min: 'icon-min', peak: 'icon-peak', anom: 'icon-anom' };
+        const itemMap = { max: 'item-max', min: 'item-min', peak: 'item-peak', anom: 'item-anom' };
+        const iconCls = iconMap[a.type] || 'icon-anom';
+        const itemCls = itemMap[a.type] || 'item-anom';
+        const iconFA = a.type === 'max' ? 'fa-arrow-up' : a.type === 'min' ? 'fa-arrow-down' : 'fa-bolt';
+
         const div = document.createElement('div');
-        div.className = 'notify-item';
+        div.className = `notify-item ${itemCls}`;
         div.innerHTML =
-          `<div class="icon ${iconClass}"><i class="fas fa-bolt"></i></div>
+          `<div class="icon ${iconCls}"><i class="fas ${iconFA}"></i></div>
        <div><div style="font-weight:600;">${a.message}</div>
        <div style="opacity:.7;font-size:.8rem;">${a.ts}</div></div>`;
         list.appendChild(div);
@@ -1536,6 +1602,7 @@
         else { badge.style.display = 'none'; }
       }
     }
+
     function resetDailyNotifications() {
       // ไม่ลบประวัติทั้งหมด แค่ทำให้ “วันนี้” ว่าง
       __dayKey = todayKey();
@@ -1556,10 +1623,6 @@
         resetDailyNotifications();
       }
     }
-
-
-
-
 
     function loadInAppAlerts() {
       try {
@@ -1616,7 +1679,11 @@
         addInAppAlert('peak', msg);
         showSystemNotification('Daily Energy Peak', msg);
       }
+
+
     }
+
+
 
 
     // ------------------ Anomaly Detector ------------------
@@ -1659,6 +1726,79 @@
             showSystemNotification('Power spike', msg);
           }
         }
+      }
+
+    }
+
+    function refreshPowerExtremaBadges() {
+      const { min, max } = __readExtrema(todayKey());
+      const minEl = document.getElementById('powerMinToday');
+      const maxEl = document.getElementById('powerMaxToday');
+      if (minEl) minEl.textContent = (min != null) ? min.toFixed(2) : '-';
+      if (maxEl) maxEl.textContent = (max != null) ? max.toFixed(2) : '-';
+    }
+
+    // ------------------ Daily Power Min/Max ------------------
+    function __extremaKeys(dateKey) {
+      const base = `momay_power_extrema_${ALERT_RULES.endpointKey}_${dateKey}`;
+      return { min: `${base}_min`, max: `${base}_max`, seeded: `${base}_seeded` };
+    }
+    function __readExtrema(dateKey) {
+      const { min, max, seeded } = __extremaKeys(dateKey);
+      const minV = parseFloat(localStorage.getItem(min));
+      const maxV = parseFloat(localStorage.getItem(max));
+      return {
+        min: Number.isFinite(minV) ? minV : null,
+        max: Number.isFinite(maxV) ? maxV : null,
+        seeded: localStorage.getItem(seeded) === '1'
+      };
+    }
+    function __writeExtrema(dateKey, which, value) {
+      localStorage.setItem(__extremaKeys(dateKey)[which], String(value));
+    }
+    function __markSeeded(dateKey) {
+      localStorage.setItem(__extremaKeys(dateKey).seeded, '1');
+    }
+
+    // เรียกทุกครั้งที่มี "ค่าจุดล่าสุด" ของวันนี้เข้ามา
+    function checkDailyPowerExtrema(buildingId, powerKW) {
+      if (!ALERT_RULES.powerExtrema?.enabled) return;
+      if (!(typeof powerKW === 'number' && powerKW > 0)) return;
+
+      const dateKey = todayKey();
+      // ให้เด้งเฉพาะ "วันนี้" (ไม่เด้งตอนเปิดดูย้อนหลัง)
+      if (dateKey !== (__dayKey || todayKey())) return;
+
+      const eps = ALERT_RULES.powerExtrema.epsilonKW ?? 0;
+      const { min, max, seeded } = __readExtrema(dateKey);
+
+      // ค่าแรกของวัน
+      if (!seeded && min == null && max == null) {
+        __writeExtrema(dateKey, 'min', powerKW);
+        __writeExtrema(dateKey, 'max', powerKW);
+        __markSeeded(dateKey);
+        if (!ALERT_RULES.powerExtrema.seedSilence) {
+          addInAppAlert('anom', `New daily MIN power ${powerKW.toFixed(2)} kW (Building ${buildingId})`);
+          showSystemNotification('Daily Power Min', `New min ${powerKW.toFixed(2)} kW (B${buildingId})`);
+          addInAppAlert('peak', `New daily MAX power ${powerKW.toFixed(2)} kW (Building ${buildingId})`);
+          showSystemNotification('Daily Power Max', `New max ${powerKW.toFixed(2)} kW (B${buildingId})`);
+        }
+        return;
+      }
+
+      // ทำสถิติใหม่
+      const newMin = (min == null) || (powerKW < min - eps);
+      const newMax = (max == null) || (powerKW > max + eps);
+
+      if (newMin) {
+        __writeExtrema(dateKey, 'min', powerKW);
+        addInAppAlert('min', `New daily MIN power ${powerKW.toFixed(2)} kW (Building ${buildingId})`);
+        showSystemNotification('Daily Power Min', `🔻 New min ${powerKW.toFixed(2)} kW (B${buildingId})`);
+      }
+      if (newMax) {
+        __writeExtrema(dateKey, 'max', powerKW);
+        addInAppAlert('max', `New daily MAX power ${powerKW.toFixed(2)} kW (Building ${buildingId})`);
+        showSystemNotification('Daily Power Max', `🔺 New max ${powerKW.toFixed(2)} kW (B${buildingId})`);
       }
     }
 
@@ -2125,16 +2265,11 @@
       }
     }
     (function () {
-      // ป้องกันติดตั้งซ้ำเวลา hot-reload หรือสคริปต์ถูกรันซ้ำ
       if (window.__rtHookInstalled) return;
-
-      // ต้องมีฟังก์ชันและ state พร้อมใช้ก่อน
       if (typeof fetchRealTimeData !== 'function') return;
       if (typeof checkAnomaly !== 'function' || typeof checkDailyPeak !== 'function') return;
 
-      // ใช้ state เดิมถ้ามี ไม่งั้นสร้าง
       window.lastTimestampByBuilding = window.lastTimestampByBuilding || {};
-
       const _orig_fetchRealTimeData = fetchRealTimeData;
 
       fetchRealTimeData = async function (buildingId, endpoint) {
@@ -2142,7 +2277,7 @@
           await _orig_fetchRealTimeData(buildingId, endpoint);
         } catch (e) {
           console.error('[notify] original fetchRealTimeData failed', e);
-          return; // ถ้าล้มเหลวก็ไม่ต้องประมวลผลต่อ
+          return;
         }
 
         const arr = (chartData && chartData[buildingId]) || [];
@@ -2151,19 +2286,27 @@
         const last = arr[arr.length - 1];
         const ts = last && last.timestamp;
 
-        // 🔒 กันแจ้งซ้ำ: ทำงานเฉพาะเมื่อมี timestamp ใหม่เท่านั้น
         if (ts && window.lastTimestampByBuilding[buildingId] !== ts) {
           window.lastTimestampByBuilding[buildingId] = ts;
 
-          // ตรวจ anomaly จากจุดล่าสุด
+          // 1) anomaly
           try { checkAnomaly(buildingId, last); }
           catch (e) { console.error('[notify] anomaly error', e); }
 
-          // อัปเดต peak (อ่านจากกล่อง daily-energy ถ้ามีค่า)
+          // 2) daily peak (จากกล่อง daily-energy)
           try {
             const n = parseFloat(document.getElementById('daily-energy')?.textContent || 'NaN');
             if (!Number.isNaN(n)) checkDailyPeak(buildingId, n);
           } catch (e) { console.error('[notify] peak error', e); }
+
+          // 3) ✅ daily power MIN/MAX (ใช้จุดล่าสุด)
+          try {
+            const p = (last.active_power ?? last.power ?? null); // หน่วยควรเป็น kW
+            if (typeof p === 'number') {
+              checkDailyPowerExtrema(buildingId, p);
+              refreshPowerExtremaBadges();
+            }
+          } catch (e) { console.error('[notify] extrema error', e); }
         }
       };
 
@@ -2202,6 +2345,8 @@
         const billValue = data.electricity_bill ?? data.bill ?? data.total_bill ?? '-';
         const energyValueRaw = data.total_energy_kwh ?? data.energy_kwh ?? data.kwh ?? null;
         const energyValue = (energyValueRaw != null) ? Number(energyValueRaw).toFixed(2) : null;
+
+        
 
         const map = {
           daily: { energyId: 'daily-energy', billId: 'daily-bill' },
@@ -2326,6 +2471,8 @@
       __dayKey = todayKey();              // เก็บวันตอนเริ่ม
       setInterval(checkDayRollover, 30000);
 
+      refreshPowerExtremaBadges();
+
       const today = todayKey();
       document.getElementById('datePicker').setAttribute('max', today);
 
@@ -2334,7 +2481,7 @@
 
       // Update bill data every minute (only for monthly/yearly, not daily as it's calculated from chart data)
       setInterval(() => {
-      fetchAllBillData();
+        fetchAllBillData();
       }, 60000);
     }
 
