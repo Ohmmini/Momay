@@ -989,7 +989,7 @@
       }
     }
 
-    #back-button {
+    #backButton {
       font-size: 2rem;
       color: #667eea;
       text-decoration: none;
@@ -1411,7 +1411,7 @@
     </div>
 
   </div>
-  </div>
+
 
   <!-- Date Picker Modal -->
   <div id="dateModal" class="modal">
@@ -1435,6 +1435,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
+    const TZ_OFFSET_HOURS = 7; // ถอด TZ ออกให้เป็น UTC ล้วน
+
     // Authentication System
     const ACCESS_CODE = "240124"; // รหัสผ่าน
     let rememberMe = false;
@@ -1455,7 +1457,7 @@
 
     // ------------------ CONFIG: กฎ/เกณฑ์แจ้งเตือน ------------------
     const ALERT_RULES = {
-      allowedHours: { start: 8, end: 22 },          // แจ้งเฉพาะ 08:00–22:00
+      allowedHours: { start: 0, end: 23.59 },          // แจ้งเฉพาะ 00:00–23:59
       voltageRange: { min: 200, max: 250 },         // V
       currentMax: 80,                                // A
       powerSpikePct: 50,                             // เพิ่มขึ้น > % จากค่าเฉลี่ย 5 นาที
@@ -1471,8 +1473,10 @@
 
     // ------------------ Utilities ------------------
     function withinNotifyHours(d = new Date()) {
-      const h = d.getHours();
-      return (h >= ALERT_RULES.allowedHours.start && h < ALERT_RULES.allowedHours.end);
+      const minutesNow = d.getHours() * 60 + d.getMinutes();
+      const start = Math.round(ALERT_RULES.allowedHours.start * 60); // รองรับทศนิยม เช่น 8.5 = 08:30
+      const end = Math.round(ALERT_RULES.allowedHours.end * 60);
+      return minutesNow >= start && minutesNow < end;
     }
     function requestNotifyPermission() {
       if (!('Notification' in window)) return;
@@ -1548,10 +1552,11 @@
 
     function checkDayRollover() {
       const nowKey = todayKey();
-      if (__dayKey && !sameDay(__dayKey, nowKey)) {
+      if (__dayKey && nowKey !== __dayKey) {
         resetDailyNotifications();
       }
     }
+
 
 
 
@@ -1561,25 +1566,7 @@
         inAppAlerts = JSON.parse(localStorage.getItem('momayAlerts') || '[]');
       } catch { inAppAlerts = []; }
     }
-    function renderAlertList() {
-      const list = document.getElementById('notifyList');
-      if (!list) return;
-      list.innerHTML = '';
-      inAppAlerts.forEach(a => {
-        const iconClass = a.type === 'peak' ? 'icon-peak' : 'icon-anom';
-        const div = document.createElement('div');
-        div.className = 'notify-item';
-        div.innerHTML = `<div class="icon ${iconClass}"><i class="fas fa-bolt"></i></div>
-      <div><div style="font-weight:600;">${a.message}</div><div style="opacity:.7;font-size:.8rem;">${a.ts}</div></div>`;
-        list.appendChild(div);
-      });
-      const badge = document.getElementById('notifyBadge');
-      if (badge) {
-        const cnt = inAppAlerts.length;
-        if (cnt > 0) { badge.textContent = cnt; badge.style.display = 'inline-flex'; }
-        else { badge.style.display = 'none'; }
-      }
-    }
+
     function setupNotifications() {
       // โหลดประวัติเดิม
       loadInAppAlerts();
@@ -1611,95 +1598,6 @@
         if (e.target.id === 'notifyBell' || e.target.closest('#notifyPanel') || e.target.closest('#notifyBell')) return;
         panel.style.display = 'none';
       });
-
-      function installNotificationHooks() {
-        // กันติดตั้งซ้ำ
-        if (installNotificationHooks.__installed) return;
-        installNotificationHooks.__installed = true;
-
-        // ต้องมีฟังก์ชันต้นฉบับก่อน
-        if (typeof calculateAndUpdateDailyEnergy !== 'function' || typeof fetchRealTimeData !== 'function') {
-          console.warn('[notify] base functions not ready, retry…');
-          setTimeout(installNotificationHooks, 50);
-          return;
-        }
-
-        // --- Hook: หลังคำนวณ daily energy เสร็จ ให้เช็ค peak ---
-        const _orig_calculateAndUpdateDailyEnergy = calculateAndUpdateDailyEnergy;
-        calculateAndUpdateDailyEnergy = function (buildingId, data) {
-          try { _orig_calculateAndUpdateDailyEnergy(buildingId, data); } catch (e) { console.error(e); }
-          try {
-            const elementId = buildingId === 1 ? 'daily-energy' : 'dailyValue2';
-            const num = parseFloat(document.getElementById(elementId)?.textContent || '0');
-            if (!isNaN(num)) checkDailyPeak(buildingId, num);
-          } catch (e) { console.error('[notify] peak error', e); }
-        };
-
-        // --- Hook: หลังดึง real-time เสร็จ ให้เช็ค anomaly จากจุดล่าสุด ---
-        const _orig_fetchRealTimeData = fetchRealTimeData;
-        fetchRealTimeData = async function (buildingId, endpoint) {
-          try {
-            await _orig_fetchRealTimeData(buildingId, endpoint);
-            const arr = (chartData && chartData[buildingId]) || [];
-            if (!arr.length) return;
-            const last = arr[arr.length - 1];
-            const ts = last.timestamp;
-            if (ts && lastTimestampByBuilding[buildingId] !== ts) {
-              lastTimestampByBuilding[buildingId] = ts;
-              checkAnomaly(buildingId, last);
-            }
-          } catch (e) {
-            console.error('[notify] realtime hook error', e);
-          }
-        };
-
-        console.log('[notify] hooks installed');
-      }
-
-
-    }
-    function installNotificationHooks() {
-      // กันติดตั้งซ้ำ
-      if (installNotificationHooks.__installed) return;
-      installNotificationHooks.__installed = true;
-
-      // ต้องมีฟังก์ชันต้นฉบับก่อน
-      if (typeof calculateAndUpdateDailyEnergy !== 'function' || typeof fetchRealTimeData !== 'function') {
-        console.warn('[notify] base functions not ready, retry…');
-        setTimeout(installNotificationHooks, 50);
-        return;
-      }
-
-      // --- Hook: หลังคำนวณ daily energy เสร็จ ให้เช็ค peak ---
-      const _orig_calculateAndUpdateDailyEnergy = calculateAndUpdateDailyEnergy;
-      calculateAndUpdateDailyEnergy = function (buildingId, data) {
-        try { _orig_calculateAndUpdateDailyEnergy(buildingId, data); } catch (e) { console.error(e); }
-        try {
-          const elementId = buildingId === 1 ? 'daily-energy' : 'dailyValue2';
-          const num = parseFloat(document.getElementById(elementId)?.textContent || '0');
-          if (!isNaN(num)) checkDailyPeak(buildingId, num);
-        } catch (e) { console.error('[notify] peak error', e); }
-      };
-
-      // --- Hook: หลังดึง real-time เสร็จ ให้เช็ค anomaly จากจุดล่าสุด ---
-      const _orig_fetchRealTimeData = fetchRealTimeData;
-      fetchRealTimeData = async function (buildingId, endpoint) {
-        try {
-          await _orig_fetchRealTimeData(buildingId, endpoint);
-          const arr = (chartData && chartData[buildingId]) || [];
-          if (!arr.length) return;
-          const last = arr[arr.length - 1];
-          const ts = last.timestamp;
-          if (ts && lastTimestampByBuilding[buildingId] !== ts) {
-            lastTimestampByBuilding[buildingId] = ts;
-            checkAnomaly(buildingId, last);
-          }
-        } catch (e) {
-          console.error('[notify] realtime hook error', e);
-        }
-      };
-
-      console.log('[notify] hooks installed');
     }
 
 
@@ -2002,9 +1900,6 @@
     // เก็บ dayKey ปัจจุบัน
     let __dayKey = null;
 
-    // ใช้สำหรับเวลาไทย (UTC+7)
-    const dateStr = formatYMDwithOffset(new Date(), 7);
-
     // Update chart with specific data type
     function updateChartWithDataType(buildingId, data) {
       const chart = charts[buildingId];
@@ -2089,15 +1984,14 @@
     }
 
     // Period management
-    function setPeriod(period) {
+    function setPeriod(period, ev) {
       currentPeriod = period;
 
       // Update tab appearance
       document.querySelectorAll('.period-tab').forEach(tab => {
         tab.classList.remove('active');
       });
-      event.target.classList.add('active');
-
+      ev?.target?.classList?.add('active');
       // Update date display
       updateDateDisplay();
 
@@ -2140,9 +2034,9 @@
       currentBuilding = 0; // Indicates global date change
 
       // Set max date to today
-      const today = formatYMDwithOffset(new Date(), 7);
+      const today = formatYMDwithOffset(new Date(), TZ_OFFSET_HOURS);
       document.getElementById('datePicker').setAttribute('max', today);
-      document.getElementById('datePicker').value = formatYMDwithOffset(currentDate, 7);
+      document.getElementById('datePicker').value = formatYMDwithOffset(currentDate, TZ_OFFSET_HOURS);
     }
 
     function fetchHistoricalData() {
@@ -2211,7 +2105,7 @@
         fetchRealTimeData(buildingId, endpoint);
       }, 3000);
 
-      updateChartDateDisplay(buildingId, formatYMDwithOffset(new Date(), 7));
+      updateChartDateDisplay(buildingId, formatYMDwithOffset(new Date(), TZ_OFFSET_HOURS));
     }
 
     // Fetch real-time data
@@ -2230,7 +2124,52 @@
         console.error('Error fetching real-time data:', error);
       }
     }
+    (function () {
+      // ป้องกันติดตั้งซ้ำเวลา hot-reload หรือสคริปต์ถูกรันซ้ำ
+      if (window.__rtHookInstalled) return;
 
+      // ต้องมีฟังก์ชันและ state พร้อมใช้ก่อน
+      if (typeof fetchRealTimeData !== 'function') return;
+      if (typeof checkAnomaly !== 'function' || typeof checkDailyPeak !== 'function') return;
+
+      // ใช้ state เดิมถ้ามี ไม่งั้นสร้าง
+      window.lastTimestampByBuilding = window.lastTimestampByBuilding || {};
+
+      const _orig_fetchRealTimeData = fetchRealTimeData;
+
+      fetchRealTimeData = async function (buildingId, endpoint) {
+        try {
+          await _orig_fetchRealTimeData(buildingId, endpoint);
+        } catch (e) {
+          console.error('[notify] original fetchRealTimeData failed', e);
+          return; // ถ้าล้มเหลวก็ไม่ต้องประมวลผลต่อ
+        }
+
+        const arr = (chartData && chartData[buildingId]) || [];
+        if (!arr.length) return;
+
+        const last = arr[arr.length - 1];
+        const ts = last && last.timestamp;
+
+        // 🔒 กันแจ้งซ้ำ: ทำงานเฉพาะเมื่อมี timestamp ใหม่เท่านั้น
+        if (ts && window.lastTimestampByBuilding[buildingId] !== ts) {
+          window.lastTimestampByBuilding[buildingId] = ts;
+
+          // ตรวจ anomaly จากจุดล่าสุด
+          try { checkAnomaly(buildingId, last); }
+          catch (e) { console.error('[notify] anomaly error', e); }
+
+          // อัปเดต peak (อ่านจากกล่อง daily-energy ถ้ามีค่า)
+          try {
+            const n = parseFloat(document.getElementById('daily-energy')?.textContent || 'NaN');
+            if (!Number.isNaN(n)) checkDailyPeak(buildingId, n);
+          } catch (e) { console.error('[notify] peak error', e); }
+        }
+      };
+
+      window.__rtHookInstalled = true;
+      console.log('[notify] realtime hook installed');
+    })();
 
 
     // Update individual chart date display
@@ -2239,74 +2178,55 @@
     }
     async function fetchBillData(buildingId, period, endpoint, date = null) {
       try {
+        // base = YYYY-MM-DD (ชดเชยโซนเวลา +7 ด้วยฟังก์ชันเดิมของคุณ)
+        const base = (date ?? formatYMDwithOffset(new Date(), TZ_OFFSET_HOURS)).slice(0, 10);
+        const y = base.slice(0, 4);   // YYYY
+        const m = base.slice(5, 7);   // MM
+        const d = base;               // YYYY-MM-DD
+
         let url;
         if (period === 'daily') {
-          const d = (date || formatYMDwithOffset(new Date(), 7));
           url = `https://api-kx4r63rdjq-an.a.run.app/daily-bill/sensor${endpoint}/${d}`;
+        } else if (period === 'monthly') {
+          url = `https://api-kx4r63rdjq-an.a.run.app/monthly-bill/sensor${endpoint}/${y}-${m}`;
+        } else if (period === 'yearly') {
+          url = `https://api-kx4r63rdjq-an.a.run.app/yearly-bill/sensor${endpoint}/${y}`;
         } else {
-          url = `https://api-kx4r63rdjq-an.a.run.app/${period}-bill/sensor${endpoint}`;
-        }
-        if (period === 'monthly') {
-          const d = (date || formatYMDwithOffset(new Date(), 7));
-          url = `https://api-kx4r63rdjq-an.a.run.app/monthly-bill/sensor${endpoint}`;
-        } else {
-          console.log('No monthly date provided')
-        }
-        if (period === 'yearly') {
-          const d = (date || formatYMDwithOffset(new Date(), 7));
-          url = `https://api-kx4r63rdjq-an.a.run.app/yearly-bill/sensor${endpoint}`;
-        } else {
-          console.log('No yearly date provided')
+          return;
         }
 
-
-        const res = await fetch(url);
+        const res = await fetch(`${url}?_=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`Failed to fetch ${period} bill`);
         const data = await res.json();
 
-        // สมมติ API ส่ง { electricity_bill, energy_kwh } (ถ้าไม่มี energy_kwh ก็ไม่อัพเดตส่วน energy)
-        const billValue = (data.electricity_bill ?? '-');
-        const energyValue = (data.total_energy_kwh != null ? Number(data.total_energy_kwh).toFixed(2) : null);
+        const billValue = data.electricity_bill ?? data.bill ?? data.total_bill ?? '-';
+        const energyValueRaw = data.total_energy_kwh ?? data.energy_kwh ?? data.kwh ?? null;
+        const energyValue = (energyValueRaw != null) ? Number(energyValueRaw).toFixed(2) : null;
 
-        console.log(`Fetched ${period} bill:`, data);
-
-        // แม็ป id ของการ์ดตามช่วงเวลา
         const map = {
           daily: { energyId: 'daily-energy', billId: 'daily-bill' },
           monthly: { energyId: 'monthly-energy', billId: 'Monthly-Bill' },
           yearly: { energyId: 'yearly-energy', billId: 'Yearly-Bill' },
         };
-
         const ids = map[period];
         if (!ids) return;
 
-        // อัปเดต "บิล"
         const billEl = document.getElementById(ids.billId);
         if (billEl) billEl.textContent = formatBill(billValue);
 
-        // อัปเดต "พลังงานรวม" ถ้า API มีส่งมา
         if (energyValue !== null) {
           const energyEl = document.getElementById(ids.energyId);
-          console.log(energyEl)
           if (energyEl) energyEl.textContent = energyValue;
-
         }
-
-      } catch (error) {
-        console.error(`Error fetching ${period} bill:`, error);
+      } catch (err) {
+        console.error(`Error fetching ${period} bill:`, err);
         const mapErr = {
-          daily: { energyId: 'daily-energy', billId: 'daily-bill' },
-          monthly: { energyId: 'monthly-energy', billId: 'Monthly-Bill' },
-          yearly: { energyId: 'yearly-energy', billId: 'Yearly-Bill' },
+          daily: { billId: 'daily-bill' },
+          monthly: { billId: 'Monthly-Bill' },
+          yearly: { billId: 'Yearly-Bill' },
         };
-        const ids = mapErr[period];
-        if (ids) {
-          const billEl = document.getElementById(ids.billId);
-          if (billEl) billEl.textContent = 'Error';
-          // ไม่ทับค่าพลังงาน ถ้าอยากทับ ให้ปลดคอมเมนต์
-          // const energyEl = document.getElementById(ids.energyId);
-          // if (energyEl) energyEl.textContent = 'Error';
-        }
+        const billEl = document.getElementById(mapErr[period]?.billId);
+        if (billEl) billEl.textContent = 'Error';
       }
     }
 
@@ -2320,7 +2240,7 @@
       updateBillLabels();
 
       if (currentPeriod === 'day') {
-        const dateStr = formatYMDwithOffset(currentDate, 7);
+        const dateStr = formatYMDwithOffset(currentDate, TZ_OFFSET_HOURS);
         fetchHistoricalDataForDate(1, 'Clinic', dateStr);
         updateChartDateDisplay(1, dateStr);
       } else {
@@ -2380,28 +2300,17 @@
           currentPeriod === 'day' ? 'Yearly Energy' : `Total Energy`;
       });
     }
-
     function fetchAllBillData() {
       const endpoint = 'Clinic';
-      const dateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      // รูปแบบ YYYY-MM-DD ตามฟังก์ชันของคุณ (ชดเชย +7)
+      const baseDate = formatYMDwithOffset(currentDate, TZ_OFFSET_HOURS);
 
-      // รายวัน (ใช้ endpoint /daily-bill/sensorClinic/:date)
-      fetchBillData(1, 'daily', endpoint, dateStr);
-
-      // รายเดือน/รายปีตาม endpoint เดิม
-      fetchBillData(1, 'monthly', endpoint);
-      fetchBillData(1, 'yearly', endpoint);
+      // ส่งวันที่เดียวกันให้ทั้ง 3 period
+      fetchBillData(1, 'daily', endpoint, baseDate);
+      fetchBillData(1, 'monthly', endpoint, baseDate);
+      fetchBillData(1, 'yearly', endpoint, baseDate);
     }
 
-    const TZ_OFFSET_HOURS = 7;
-
-    function checkDayRollover() {
-      const nowKey = todayKey();
-      if (__dayKey && nowKey !== __dayKey) {
-
-        resetDailyNotifications();
-      }
-    }
 
 
     // Initialize everything
@@ -2413,7 +2322,6 @@
       updateDateDisplay();
 
       setupNotifications();
-      // installNotificationHooks(); // ถ้าใช้ ให้เรียกหลัง setupNotifications
 
       __dayKey = todayKey();              // เก็บวันตอนเริ่ม
       setInterval(checkDayRollover, 30000);
@@ -2426,7 +2334,7 @@
 
       // Update bill data every minute (only for monthly/yearly, not daily as it's calculated from chart data)
       setInterval(() => {
-        fetchAllBillData();
+      fetchAllBillData();
       }, 60000);
     }
 
@@ -2468,9 +2376,6 @@
 
 
 
-  </script>
-
-  <script>
 
     document.querySelectorAll('.metric-card').forEach(card => {
       card.addEventListener('click', () => {
@@ -2502,8 +2407,8 @@
         }
       });
     });
-  </script>
-  <script>
+
+
     const sky = document.getElementById("authOverlay");
     const numStars = 200; // จำนวนดาว
 

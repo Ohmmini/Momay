@@ -190,7 +190,7 @@ app.post("/sensor/clinic", async (req, res) => {
         const newEntry = new clinic_power({
             voltage: data.voltage,
             current: data.current,
-            power: ((data.voltage*data.current)/1000).toFixed(2),
+            power: ((data.voltage * data.current) / 1000).toFixed(2),
             // active_power_phase_a: data.active_power_phase_a,
             // active_power_phase_b: data.active_power_phase_b,
             // active_power_phase_c: data.active_power_phase_c,
@@ -1105,92 +1105,52 @@ app.get('/daily-bill/sensorClinic', async (req, res) => {
 });
 
 // GET /daily-bill/sensorClinic/:date
-app.get('/daily-bill/sensorClinic/:date?', async (req, res) => {
-  try {
-    // 1) รับวันที่ (YYYY-MM-DD); ถ้าไม่ส่ง ใช้วันนี้ (โซนเวลาไทย)
-    const paramDate = req.params.date;
-    const tz = 'Asia/Bangkok';
-    const todayTH = new Date().toLocaleString('en-CA', { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' });
-    // todayTH รูปแบบ "YYYY-MM-DD, HH:MM:SS" ในบาง Node เวอร์ชัน ให้ cut เฉพาะวัน
-    const todayDateOnly = todayTH.slice(0,10);
-    const selectedDate = (paramDate && /^\d{4}-\d{2}-\d{2}$/.test(paramDate)) ? paramDate : todayDateOnly;
+app.get('/daily-bill/sensorClinic/:date', async (req, res) => {
+    try {
+        const dateStr = req.params.date.trim();
 
-    // 2) ขอบเขตวัน (ตี 00:00–23:59:59 ตามเวลาไทย)
-    const dayStart = new Date(`${selectedDate}T00:00:00+07:00`);
-    const dayEnd   = new Date(`${selectedDate}T23:59:59.999+07:00`);
-
-    // 3) คำนวณพลังงานแบบ 15 นาที: avg(power) * 0.25 kWh แล้ว sum ทั้งวัน
-    const pipeline = [
-      {
-        $match: {
-          timestamp: { $gte: dayStart, $lte: dayEnd }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
         }
-      },
-      // เลือกฟิลด์ power ที่จะใช้ (active_power > power)
-      {
-        $addFields: {
-          _powerKW: { $ifNull: ["$active_power", "$power"] }
+
+        // ใช้ UTC ล้วน ๆ
+        const start = new Date(`${dateStr}T00:00:00Z`);
+        const end = new Date(`${dateStr}T23:59:59.999Z`);
+
+        console.log('Daily bill range (UTC):', { start, end });
+
+        const agg = await clinic_power.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end } } },
+            {
+                $group: {
+                    _id: null,
+                    totalPowerKWsum: { $sum: '$power' },
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        if (!agg.length) {
+            return res.status(404).json({ error: `No data found for ${dateStr}` });
         }
-      },
-      // ตัดข้อมูล null/NaN/<=0 ทิ้ง (ถ้าไม่ต้องการกรองค่าศูนย์ ลบบรรทัดนี้ได้)
-      {
-        $match: { _powerKW: { $gt: 0 } }
-      },
-      // รวมเป็นช่วงละ 15 นาที ตาม timezone ไทย
-      {
-        $group: {
-          _id: {
-            $dateTrunc: {
-              date: "$timestamp",
-              unit: "minute",
-              binSize: 15,
-              timezone: tz
-            }
-          },
-          avgPowerKW: { $avg: "$_powerKW" }
-        }
-      },
-      // พลังงานของแต่ละช่วง (kWh) = avg(kW) * 0.25
-      {
-        $project: {
-          _id: 0,
-          energyKwhSlot: { $multiply: ["$avgPowerKW", 0.25] }
-        }
-      },
-      // รวมทั้งวัน
-      {
-        $group: {
-          _id: null,
-          totalEnergyKwh: { $sum: "$energyKwhSlot" }
-        }
-      }
-    ];
 
-    const agg = await clinic_power.aggregate(pipeline);
+        const totalEnergyKwh = agg[0].totalPowerKWsum / 60;
+        const electricityBill = Number((totalEnergyKwh * 4.4).toFixed(2));
 
-    // ถ้าไม่มีข้อมูล ส่ง 200 พร้อมค่า 0 จะใช้งานฝั่ง client ง่ายกว่า 404
-    const totalEnergyKwh = agg.length ? agg[0].totalEnergyKwh : 0;
-
-    // 4) คิดค่าไฟ — ตอนนี้เป็น flat rate 4.40 THB/kWh
-    // สามารถต่อยอดเป็นแบบขั้นบันได/รวม Ft/Service Charge ได้
-    const calculateElectricityBill = (units) => {
-      const rateTHBperKwh = 4.40;
-      return Number((units * rateTHBperKwh).toFixed(2));
-    };
-
-    const electricityBill = calculateElectricityBill(totalEnergyKwh);
-
-    res.json({
-      date: selectedDate,
-      total_energy_kwh: Number(totalEnergyKwh.toFixed(2)),
-      electricity_bill: electricityBill
-    });
-
-  } catch (err) {
-    console.error('Error calculating daily electricity bill:', err);
-    res.status(500).json({ error: 'Failed to process data' });
-  }
+        res.json({
+            date: dateStr,
+            timezone: 'UTC',
+            samples: agg[0].count,
+            total_energy_kwh: Number(totalEnergyKwh.toFixed(2)),
+            electricity_bill: electricityBill,
+        });
+    } catch (err) {
+        console.error('daily-bill error:', err);
+        res.status(500).json({ error: 'Failed to process data' });
+    }
 });
+
+
 
 
 
@@ -1345,6 +1305,62 @@ app.get('/monthly-bill/sensorClinic', async (req, res) => {
         res.status(500).json({ error: 'Failed to process data' });
     }
 });
+// วางไว้ "หลัง" route ปัจจุบันเดือน (ถ้ามี) เพื่อไม่ชนลำดับแมตช์
+// --- Monthly: GET /monthly-bill/sensorClinic/:month  (เช่น 2025-08) ---
+app.get('/monthly-bill/sensorClinic/:month', async (req, res) => {
+    try {
+        const monthStr = String(req.params.month || '').trim(); // 'YYYY-MM'
+
+        // ตรวจรูปแบบ YYYY-MM
+        if (!/^\d{4}-\d{2}$/.test(monthStr)) {
+            return res.status(400).json({ error: 'Invalid month format. Use YYYY-MM' });
+        }
+
+        const [yStr, mStr] = monthStr.split('-');
+        const year = parseInt(yStr, 10);
+        const monthIndex = parseInt(mStr, 10) - 1; // 0..11
+
+        if (monthIndex < 0 || monthIndex > 11) {
+            return res.status(400).json({ error: 'Invalid month. Use 01..12' });
+        }
+
+        // กรอบเวลา UTC: [start, nextMonthStart)
+        const start = new Date(Date.UTC(year, monthIndex, 1, 0, 0, 0, 0));
+        const nextMonthStart = new Date(Date.UTC(year, monthIndex + 1, 1, 0, 0, 0, 0));
+
+        console.log('Monthly bill range (UTC):', { start, endExclusive: nextMonthStart });
+
+        const agg = await clinic_power.aggregate([
+            { $match: { timestamp: { $gte: start, $lt: nextMonthStart } } },
+            {
+                $group: {
+                    _id: null,
+                    totalPowerKWsum: { $sum: '$power' }, // สมมติ power เป็น kW ราย sample
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        if (!agg.length) {
+            return res.status(404).json({ error: `No data found for ${monthStr}` });
+        }
+
+        // แปลง kW ต่อ sample -> kWh (เหมือน daily ที่ใช้ /60)
+        const totalEnergyKwh = agg[0].totalPowerKWsum / 60;
+        const electricityBill = Number((totalEnergyKwh * 4.4).toFixed(2));
+
+        return res.json({
+            month: monthStr,
+            timezone: 'UTC',
+            samples: agg[0].count,
+            total_energy_kwh: Number(totalEnergyKwh.toFixed(2)),
+            electricity_bill: electricityBill,
+        });
+    } catch (err) {
+        console.error('monthly-bill error:', err);
+        return res.status(500).json({ error: 'Failed to process data' });
+    }
+});
 
 let yearcachedElectricityBillsensorClinic = null;
 let yearcachedTotalEnergyKwhsensorClinic = null;
@@ -1419,6 +1435,55 @@ app.get('/yearly-bill/sensorClinic', async (req, res) => {
     } catch (err) {
         console.error('Error calculating yearly electricity bill:', err);
         res.status(500).json({ error: 'Failed to process data' });
+    }
+});
+
+// --- Yearly: GET /yearly-bill/sensorClinic/:year  (เช่น 2025) ---
+app.get('/yearly-bill/sensorClinic/:year', async (req, res) => {
+    try {
+        const yearStr = String(req.params.year || '').trim(); // 'YYYY'
+
+        // ตรวจรูปแบบ YYYY
+        if (!/^\d{4}$/.test(yearStr)) {
+            return res.status(400).json({ error: 'Invalid year format. Use YYYY' });
+        }
+
+        const year = parseInt(yearStr, 10);
+
+        // กรอบเวลา UTC: [startOfYear, startOfNextYear)
+        const start = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+        const nextYearStart = new Date(Date.UTC(year + 1, 0, 1, 0, 0, 0, 0));
+
+        console.log('Yearly bill range (UTC):', { start, endExclusive: nextYearStart });
+
+        const agg = await clinic_power.aggregate([
+            { $match: { timestamp: { $gte: start, $lt: nextYearStart } } },
+            {
+                $group: {
+                    _id: null,
+                    totalPowerKWsum: { $sum: '$power' },
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        if (!agg.length) {
+            return res.status(404).json({ error: `No data found for ${yearStr}` });
+        }
+
+        const totalEnergyKwh = agg[0].totalPowerKWsum / 60;
+        const electricityBill = Number((totalEnergyKwh * 4.4).toFixed(2));
+
+        return res.json({
+            year: yearStr,
+            timezone: 'UTC',
+            samples: agg[0].count,
+            total_energy_kwh: Number(totalEnergyKwh.toFixed(2)),
+            electricity_bill: electricityBill,
+        });
+    } catch (err) {
+        console.error('yearly-bill error:', err);
+        return res.status(500).json({ error: 'Failed to process data' });
     }
 });
 
