@@ -841,6 +841,12 @@
         opacity: 0.7;
       }
 
+      .metric-Bill {
+        font-size: 0.8rem;
+        opacity: 0.7;
+        margin-bottom: 10px;
+      }
+
       .chart-canvas-wrapper {
         width: 120%;
         height: 100%;
@@ -1056,6 +1062,153 @@
         border-color: #718096;
         color: #f7fafc;
       }
+
+      .notify-bell {
+        position: fixed;
+        top: 20px;
+        right: 120px;
+        z-index: 1000;
+        width: 46px;
+        height: 46px;
+        border: none;
+        cursor: pointer;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        backdrop-filter: blur(10px);
+        transition: all .2s ease;
+        font-size: 1.1rem;
+      }
+
+      .notify-bell:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .notify-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 12px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, .2);
+      }
+
+      .notify-panel {
+        position: fixed;
+        top: 76px;
+        right: 20px;
+        z-index: 1000;
+        width: 320px;
+        max-height: 60vh;
+        overflow: auto;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+        backdrop-filter: blur(12px);
+      }
+
+      .notify-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        font-weight: 600;
+        color: #2d3748;
+        border-bottom: 1px solid rgba(0, 0, 0, .06);
+      }
+
+      .notify-clear {
+        border: none;
+        background: transparent;
+        color: #64748b;
+        cursor: pointer;
+      }
+
+      .notify-list {
+        padding: 8px 10px;
+      }
+
+      .notify-item {
+        display: flex;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        margin: 6px 0;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        font-size: .9rem;
+        color: #1f2937;
+      }
+
+      .notify-item .icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 28px;
+      }
+
+      .icon-peak {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #fff;
+      }
+
+      .icon-anom {
+        background: linear-gradient(135deg, #f97316, #ef4444);
+        color: #fff;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 24px;
+        z-index: 1000;
+        background: rgba(17, 24, 39, .92);
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: .9rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .notify-panel {
+          background: rgba(45, 55, 72, 0.95);
+          border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .notify-panel-header {
+          color: #f7fafc;
+          border-bottom-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .notify-item {
+          background: #2d3748;
+          border-color: #475569;
+          color: #f7fafc;
+        }
+
+        .notify-bell {
+          background: rgba(255, 255, 255, 0.12);
+        }
+      }
+
     }
 
     .User {
@@ -1075,153 +1228,6 @@
       /* กรอบสีขาวโปร่ง */
       background: transparent;
       /* ไม่มีพื้นหลัง */
-
-    }
-
-    .notify-bell {
-      position: fixed;
-      top: 20px;
-      right: 120px;
-      z-index: 1000;
-      width: 46px;
-      height: 46px;
-      border: none;
-      cursor: pointer;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
-      backdrop-filter: blur(10px);
-      transition: all .2s ease;
-      font-size: 1.1rem;
-    }
-
-    .notify-bell:hover {
-      transform: translateY(-2px);
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .notify-badge {
-      position: absolute;
-      top: -6px;
-      right: -6px;
-      min-width: 20px;
-      height: 20px;
-      padding: 0 6px;
-      background: #ef4444;
-      color: #fff;
-      font-size: 12px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 0 2px rgba(0, 0, 0, .2);
-    }
-
-    .notify-panel {
-      position: fixed;
-      top: 76px;
-      right: 20px;
-      z-index: 1000;
-      width: 320px;
-      max-height: 60vh;
-      overflow: auto;
-      background: rgba(255, 255, 255, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
-      backdrop-filter: blur(12px);
-    }
-
-    .notify-panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 14px;
-      font-weight: 600;
-      color: #2d3748;
-      border-bottom: 1px solid rgba(0, 0, 0, .06);
-    }
-
-    .notify-clear {
-      border: none;
-      background: transparent;
-      color: #64748b;
-      cursor: pointer;
-    }
-
-    .notify-list {
-      padding: 8px 10px;
-    }
-
-    .notify-item {
-      display: flex;
-      gap: 10px;
-      padding: 10px;
-      border-radius: 10px;
-      margin: 6px 0;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      font-size: .9rem;
-      color: #1f2937;
-    }
-
-    .notify-item .icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex: 0 0 28px;
-    }
-
-    .icon-peak {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: #fff;
-    }
-
-    .icon-anom {
-      background: linear-gradient(135deg, #f97316, #ef4444);
-      color: #fff;
-    }
-
-    .toast {
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 24px;
-      z-index: 1000;
-      background: rgba(17, 24, 39, .92);
-      color: #fff;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: .9rem;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .notify-panel {
-        background: rgba(45, 55, 72, 0.95);
-        border-color: rgba(255, 255, 255, 0.1);
-      }
-
-      .notify-panel-header {
-        color: #f7fafc;
-        border-bottom-color: rgba(255, 255, 255, 0.08);
-      }
-
-      .notify-item {
-        background: #2d3748;
-        border-color: #475569;
-        color: #f7fafc;
-      }
-
-      .notify-bell {
-        background: rgba(255, 255, 255, 0.12);
-      }
     }
   </style>
 </head>
@@ -1231,7 +1237,7 @@
   <!-- Authentication Overlay -->
   <div id="authOverlay" class="auth-overlay">
     <div class="auth-modal">
-      <div class="auth-logo"><img src="/static/momay.png" alt="Logo"
+      <div class="auth-logo"><img src="./picture/momay.png" alt="Logo"
           style="width:200%; height:150%; border-radius:50%; object-fit:contain; background:#fff;"> </div>
       <h2 class="auth-title">please login</h2>
       <p class="auth-subtitle">Please enter the access code to view the Momay dashboard</p>
@@ -1253,12 +1259,10 @@
     </div>
   </div>
 
-
   <!-- Logout Button -->
   <button id="logoutBtn" class="logout-btn" onclick="logout()" style="display: none;">
     <i class="fas fa-sign-out-alt"></i> Logout
   </button>
-
   <!-- Notification Bell -->
   <button id="notifyBell" class="notify-bell" title="Notifications">
     <i class="fas fa-bell"></i>
@@ -1273,6 +1277,7 @@
     </div>
     <div id="notifyList" class="notify-list"></div>
   </div>
+
 
   <button class="nav-arrow" onclick="window.location.href='/opening'" style="display: none;" id="backButton">
     <i class="fas fa-chevron-left"></i>
@@ -1334,9 +1339,17 @@
           <div class="metric-card" id="billBox1"
             data-description="การใช้พลังงานไฟฟ้าของวันนี้&#10;คำนวนจาก&#10;การรวมค่ากำลังไฟฟ้าทุก 15 นาที x 0.25 ชั่วโมง แล้วบวกสะสมไปจนครบ 24 ชั่วโมง เพื่อหาพลังงานรวมในหน่วย kWh">
             <div class="metric-label">Daily Energy</div>
-            <div class="metric-value" id="daily-energy">-</div>
-            <div class="metric-unit">kWh</div>
+            <div style="display: flex; align-items: baseline; gap: 4px;">
+              <div class="metric-value" id="daily-energy">-</div>
+              <div class="metric-unit">kWh</div>
+            </div>
+            <div class="metric-label">Daily Bill</div>
+            <div style="display: flex; align-items: baseline; gap: 4px;">
+              <div class="metric-value" id="daily-bill">-</div>
+              <div class="metric-unit">THB</div>
+            </div>
           </div>
+
 
 
 
@@ -1344,16 +1357,30 @@
           <div class="metric-card" id="monthBox1"
             data-description="การใช้พลังงานไฟฟ้าของเดือนนี้&#10;คำนวนจาก&#10;การนำค่าพลังงานรวมของแต่ละวัน x จำนวนวันของเดือนนั้นๆ">
             <div class="metric-label">Monthly Energy</div>
-            <div class="metric-value" id="monthly-energy">-</div>
-            <div class="metric-unit">kWh</div>
+            <div style="display: flex; align-items: baseline; gap: 4px;">
+              <div class="metric-value" id="monthly-energy">-</div>
+              <div class="metric-unit">kWh</div>
+            </div>
+            <div class="metric-label">Monthly Bill</div>
+            <div style="display: flex; align-items: baseline; gap: 4px;">
+              <div class="metric-value" id="Monthly-Bill">-</div>
+              <div class="metric-unit">THB</div>
+            </div>
           </div>
 
 
           <div class="metric-card" id="yearBox1"
             data-description="การใช้พลังงานไฟฟ้าของปีนี้&#10;คำนวนจาก&#10;การนำค่าพลังงานรวมของแต่ละเดือน x 12">
             <div class="metric-label">Yearly Energy</div>
-            <div class="metric-value">-</div>
-            <div class="metric-unit">kWh</div>
+            <div style="display: flex; align-items: baseline; gap: 4px;">
+              <div class="metric-value" id="yearly-energy">-</div>
+              <div class="metric-unit">kWh</div>
+            </div>
+            <div class="metric-label">Yearly Bill</div>
+            <div style="display: flex; align-items: baseline; gap: 4px;">
+              <div class="metric-value" id="Yearly-Bill">-</div>
+              <div class="metric-unit">THB</div>
+            </div>
           </div>
         </div>
 
@@ -1403,6 +1430,7 @@
       </div>
     </div>
   </div>
+
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -1468,28 +1496,66 @@
       toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3500);
     }
     function addInAppAlert(type, message) {
-      const iconClass = type === 'peak' ? 'icon-peak' : 'icon-anom';
-      inAppAlerts.unshift({ type, message, ts: new Date().toLocaleString() });
+      const alert = {
+        type,
+        message,
+        ts: new Date().toLocaleString(),
+        dayKey: todayKey()                // ⬅️ ผูกวันไว้กับรายการ
+      };
+      inAppAlerts.unshift(alert);
       inAppAlerts = inAppAlerts.slice(0, ALERT_RULES.keepLastAlerts);
-      // persist
       localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
-      // render
+      renderAlertList();                  // ให้ไปกรองตอน render
+    }
+    function renderAlertList() {
       const list = document.getElementById('notifyList');
-      if (list) {
-        const item = document.createElement('div');
-        item.className = 'notify-item';
-        item.innerHTML = `<div class="icon ${iconClass}"><i class="fas fa-bolt"></i></div>
-      <div><div style="font-weight:600;">${message}</div><div style="opacity:.7;font-size:.8rem;">${new Date().toLocaleString()}</div></div>`;
-        list.prepend(item);
-      }
-      // badge
+      if (!list) return;
+
+      const tKey = todayKey();
+      const todays = inAppAlerts.filter(a => a.dayKey === tKey); // ⬅️ แสดงเฉพาะวันนี้
+      list.innerHTML = '';
+      todays.forEach(a => {
+        const iconClass = a.type === 'peak' ? 'icon-peak' : 'icon-anom';
+        const div = document.createElement('div');
+        div.className = 'notify-item';
+        div.innerHTML =
+          `<div class="icon ${iconClass}"><i class="fas fa-bolt"></i></div>
+       <div><div style="font-weight:600;">${a.message}</div>
+       <div style="opacity:.7;font-size:.8rem;">${a.ts}</div></div>`;
+        list.appendChild(div);
+      });
+
       const badge = document.getElementById('notifyBadge');
       if (badge) {
-        const cnt = (parseInt(badge.textContent || '0', 10) || 0) + 1;
-        badge.textContent = cnt;
-        badge.style.display = 'inline-flex';
+        const cnt = todays.length;
+        if (cnt > 0) { badge.textContent = cnt; badge.style.display = 'inline-flex'; }
+        else { badge.style.display = 'none'; }
       }
     }
+    function resetDailyNotifications() {
+      // ไม่ลบประวัติทั้งหมด แค่ทำให้ “วันนี้” ว่าง
+      __dayKey = todayKey();
+      movingBufferByBuilding = {};
+      lastTimestampByBuilding = {};
+
+      // เคลียร์ peak key ของวันก่อน (ถ้าใช้ key ตามวัน)
+      const peakKeyYesterday = `momay_peak_${ALERT_RULES.endpointKey}_${__dayKey}`; // วันใหม่ใช้ key ใหม่อยู่แล้ว
+      // ไม่ต้องลบของวันนี้ เพราะยังไม่มี
+
+      renderAlertList();  // จะทำให้ badge เป็น 0 เพราะกรองเฉพาะวันนี้
+      showToast('Notifications reset for new day');
+    }
+
+    function checkDayRollover() {
+      const nowKey = todayKey();
+      if (__dayKey && !sameDay(__dayKey, nowKey)) {
+        resetDailyNotifications();
+      }
+    }
+
+
+
+
     function loadInAppAlerts() {
       try {
         inAppAlerts = JSON.parse(localStorage.getItem('momayAlerts') || '[]');
@@ -1545,39 +1611,110 @@
         if (e.target.id === 'notifyBell' || e.target.closest('#notifyPanel') || e.target.closest('#notifyBell')) return;
         panel.style.display = 'none';
       });
+
+      function installNotificationHooks() {
+        // กันติดตั้งซ้ำ
+        if (installNotificationHooks.__installed) return;
+        installNotificationHooks.__installed = true;
+
+        // ต้องมีฟังก์ชันต้นฉบับก่อน
+        if (typeof calculateAndUpdateDailyEnergy !== 'function' || typeof fetchRealTimeData !== 'function') {
+          console.warn('[notify] base functions not ready, retry…');
+          setTimeout(installNotificationHooks, 50);
+          return;
+        }
+
+        // --- Hook: หลังคำนวณ daily energy เสร็จ ให้เช็ค peak ---
+        const _orig_calculateAndUpdateDailyEnergy = calculateAndUpdateDailyEnergy;
+        calculateAndUpdateDailyEnergy = function (buildingId, data) {
+          try { _orig_calculateAndUpdateDailyEnergy(buildingId, data); } catch (e) { console.error(e); }
+          try {
+            const elementId = buildingId === 1 ? 'daily-energy' : 'dailyValue2';
+            const num = parseFloat(document.getElementById(elementId)?.textContent || '0');
+            if (!isNaN(num)) checkDailyPeak(buildingId, num);
+          } catch (e) { console.error('[notify] peak error', e); }
+        };
+
+        // --- Hook: หลังดึง real-time เสร็จ ให้เช็ค anomaly จากจุดล่าสุด ---
+        const _orig_fetchRealTimeData = fetchRealTimeData;
+        fetchRealTimeData = async function (buildingId, endpoint) {
+          try {
+            await _orig_fetchRealTimeData(buildingId, endpoint);
+            const arr = (chartData && chartData[buildingId]) || [];
+            if (!arr.length) return;
+            const last = arr[arr.length - 1];
+            const ts = last.timestamp;
+            if (ts && lastTimestampByBuilding[buildingId] !== ts) {
+              lastTimestampByBuilding[buildingId] = ts;
+              checkAnomaly(buildingId, last);
+            }
+          } catch (e) {
+            console.error('[notify] realtime hook error', e);
+          }
+        };
+
+        console.log('[notify] hooks installed');
+      }
+
+
+    }
+    function installNotificationHooks() {
+      // กันติดตั้งซ้ำ
+      if (installNotificationHooks.__installed) return;
+      installNotificationHooks.__installed = true;
+
+      // ต้องมีฟังก์ชันต้นฉบับก่อน
+      if (typeof calculateAndUpdateDailyEnergy !== 'function' || typeof fetchRealTimeData !== 'function') {
+        console.warn('[notify] base functions not ready, retry…');
+        setTimeout(installNotificationHooks, 50);
+        return;
+      }
+
+      // --- Hook: หลังคำนวณ daily energy เสร็จ ให้เช็ค peak ---
+      const _orig_calculateAndUpdateDailyEnergy = calculateAndUpdateDailyEnergy;
+      calculateAndUpdateDailyEnergy = function (buildingId, data) {
+        try { _orig_calculateAndUpdateDailyEnergy(buildingId, data); } catch (e) { console.error(e); }
+        try {
+          const elementId = buildingId === 1 ? 'daily-energy' : 'dailyValue2';
+          const num = parseFloat(document.getElementById(elementId)?.textContent || '0');
+          if (!isNaN(num)) checkDailyPeak(buildingId, num);
+        } catch (e) { console.error('[notify] peak error', e); }
+      };
+
+      // --- Hook: หลังดึง real-time เสร็จ ให้เช็ค anomaly จากจุดล่าสุด ---
+      const _orig_fetchRealTimeData = fetchRealTimeData;
+      fetchRealTimeData = async function (buildingId, endpoint) {
+        try {
+          await _orig_fetchRealTimeData(buildingId, endpoint);
+          const arr = (chartData && chartData[buildingId]) || [];
+          if (!arr.length) return;
+          const last = arr[arr.length - 1];
+          const ts = last.timestamp;
+          if (ts && lastTimestampByBuilding[buildingId] !== ts) {
+            lastTimestampByBuilding[buildingId] = ts;
+            checkAnomaly(buildingId, last);
+          }
+        } catch (e) {
+          console.error('[notify] realtime hook error', e);
+        }
+      };
+
+      console.log('[notify] hooks installed');
     }
 
-    // ใช้วันที่ตาม local timezone
-    function localDateKey(d) {
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    }
 
-    // แจ้งเตือน peak ของ "พลังงานรายวัน (kWh)" โดยอิงข้อมูลล่าสุดจริง + debounce ราย 15 นาที
-    function checkDailyEnergyPeak(buildingId, data) {
-      if (!Array.isArray(data) || data.length === 0) return;
+    // ------------------ Daily Peak Detector ------------------
+    // เก็บค่าสูงสุดรายวันของ “พลังงานรายวัน” ไว้ใน localStorage ต่อ endpoint + วันที่
+    function checkDailyPeak(buildingId, dailyEnergyKWh) {
+      const dateKey = __dayKey || todayKey();
+      // ถ้าไม่ใช่ “วันนี้” ไม่ต้องแจ้งเตือน (ป้องกันตอนเปิดดูย้อนหลัง)
+      if (dateKey !== todayKey()) return;
 
-      // เรียงเวลาให้ชัวร์
-      data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-      const last = data[data.length - 1];
-      const lastTs = new Date(last.timestamp);              // ใช้เวลาในข้อมูลจริง
-      const dateKey = localDateKey(lastTs);                 // key วันแบบ local (ไม่ใช้ toISOString())
-      const bucket = Math.floor(lastTs.getTime() / (15 * 60 * 1000)); // bucket 15 นาที (debounce)
-
-      // คำนวณ daily energy จาก data (ฟังก์ชันของคุณที่ "ไม่แตะ UI")
-      const energyKWh = calculateDailyEnergyFromData(data);
-
-      // กันแจ้งซ้ำ: ต้องเป็นบักเก็ตใหม่ และต้องมากกว่า peak เดิมพอสมควร (เช่น 0.1 kWh)
-      const keyEnergy = `peakEnergy_${dateKey}_B${buildingId}`;
-      const keyBucket = `peakEnergy_bucket_${dateKey}_B${buildingId}`;
-      const prevEnergy = parseFloat(localStorage.getItem(keyEnergy) || '-1');
-      const prevBucket = localStorage.getItem(keyBucket);
-
-      if (energyKWh > 0 && energyKWh > (isNaN(prevEnergy) ? -1 : prevEnergy) + 0.099 && String(bucket) !== prevBucket) {
-        localStorage.setItem(keyEnergy, energyKWh.toFixed(2));
-        localStorage.setItem(keyBucket, String(bucket));
-
-        const msg = `New daily peak ${energyKWh.toFixed(2)} kWh (Building ${buildingId})`;
+      const key = `momay_peak_${ALERT_RULES.endpointKey}_${dateKey}`;
+      const old = parseFloat(localStorage.getItem(key) || '-1');
+      if (dailyEnergyKWh > 0 && dailyEnergyKWh > old) {
+        localStorage.setItem(key, dailyEnergyKWh.toFixed(2));
+        const msg = `New daily peak ${dailyEnergyKWh.toFixed(2)} kWh (Building ${buildingId})`;
         addInAppAlert('peak', msg);
         showSystemNotification('Daily Energy Peak', msg);
       }
@@ -1626,71 +1763,8 @@
         }
       }
     }
-    function installNotificationHooks() {
-      // ป้องกันติดตั้งซ้ำ
-      if (installNotificationHooks.__installed) return;
-      installNotificationHooks.__installed = true;
-
-      // ต้องมีฟังก์ชันต้นฉบับก่อน
-      if (typeof calculateAndUpdateDailyEnergy !== 'function' || typeof fetchRealTimeData !== 'function') {
-        console.warn('[notify] base functions not ready, retry…');
-        setTimeout(installNotificationHooks, 50);
-        return;
-      }
-
-      // --- Hook: หลังคำนวณ daily energy เสร็จ ให้เช็ค peak แบบใหม่ ---
-      const _orig_calculateAndUpdateDailyEnergy = calculateAndUpdateDailyEnergy;
-      calculateAndUpdateDailyEnergy = function (buildingId, data) {
-        try { _orig_calculateAndUpdateDailyEnergy(buildingId, data); } catch (e) { console.error(e); }
-        try { checkDailyEnergyPeak(buildingId, data); } catch (e) { console.error('[notify] peak error', e); }
-      };
-
-      // --- Hook realtime: หลังดึงข้อมูล ให้ตรวจ anomaly และ (ถ้ามี) power-peak เพิ่มด้วยได้ ---
-      const _orig_fetchRealTimeData = fetchRealTimeData;
-      fetchRealTimeData = async function (buildingId, endpoint) {
-        try {
-          await _orig_fetchRealTimeData(buildingId, endpoint);
-          const arr = (chartData && chartData[buildingId]) || [];
-          if (!arr.length) return;
-
-          // เรียก peak ของ daily energy อิงข้อมูลจริง (แก้ timezone + debounce แล้ว)
-          checkDailyEnergyPeak(buildingId, arr);
-
-          // ตรวจจุดล่าสุด (anomaly/power-peak ถ้าเปิดใช้)
-          const last = arr[arr.length - 1];
-          const ts = last.timestamp;
-          if (ts && lastTimestampByBuilding[buildingId] !== ts) {
-            lastTimestampByBuilding[buildingId] = ts;
-            checkAnomaly(buildingId, last);
-            // ถ้าต้องการแจ้ง peak ของ kW ให้เปิดฟังก์ชันนี้:
-            // checkPowerPeak(buildingId, last);
-          }
-        } catch (e) {
-          console.error('[notify] realtime hook error', e);
-        }
-      };
 
 
-      console.log('[notify] hooks installed');
-    }
-
-
-
-
-    let peakPowerByDate = {};
-
-    function checkPowerPeak(buildingId, point) {
-      const dateKey = new Date(point.timestamp).toISOString().slice(0, 10);
-      const key = `peakPower_${dateKey}_B${buildingId}`;
-      const oldPeak = parseFloat(localStorage.getItem(key) || '0');
-      const p = point.active_power || point.power || 0;
-      if (p > oldPeak) {
-        localStorage.setItem(key, p.toFixed(2));
-        const msg = `New power peak ${p.toFixed(2)} kW (Building ${buildingId})`;
-        addInAppAlert('peak', msg);
-        showSystemNotification('Power Peak', msg);
-      }
-    }
     // Toggle remember me checkbox
     function toggleRemember() {
       rememberMe = !rememberMe;
@@ -1701,7 +1775,6 @@
         checkbox.classList.remove('checked');
       }
     }
-
 
     // Authentication function
     function authenticate() {
@@ -1917,6 +1990,21 @@
       }
     }
 
+    function formatYMDwithOffset(date, offsetHours = 0) {
+      const local = new Date(date.getTime() + offsetHours * 60 * 60 * 1000);
+      return local.toISOString().split('T')[0];
+    }
+    // คืนค่า key ของวันปัจจุบัน (YYYY-MM-DD)
+    function todayKey() {
+      return formatYMDwithOffset(new Date(), TZ_OFFSET_HOURS);
+    }
+
+    // เก็บ dayKey ปัจจุบัน
+    let __dayKey = null;
+
+    // ใช้สำหรับเวลาไทย (UTC+7)
+    const dateStr = formatYMDwithOffset(new Date(), 7);
+
     // Update chart with specific data type
     function updateChartWithDataType(buildingId, data) {
       const chart = charts[buildingId];
@@ -1927,8 +2015,8 @@
       if (data && Array.isArray(data)) {
         data.forEach(entry => {
           if (entry.timestamp) {
-            const [hour, minute] = entry.timestamp.split('T')[1].split(':');
-            const index = parseInt(hour) * 60 + parseInt(minute);
+            const dt = new Date(entry.timestamp);
+            const index = dt.getUTCHours() * 60 + dt.getUTCMinutes();
             if (index >= 0 && index < 1440) {
               let value = 0;
 
@@ -1954,6 +2042,9 @@
         });
       }
 
+
+
+
       // Update chart color based on data type
       chart.data.datasets[0].borderColor = config.color;
       chart.data.datasets[0].data = newData;
@@ -1968,6 +2059,7 @@
       chart.data.datasets[0].backgroundColor = gradient;
 
       chart.update('none');
+
     }
 
     // Helper function to convert hex to rgb
@@ -2048,9 +2140,9 @@
       currentBuilding = 0; // Indicates global date change
 
       // Set max date to today
-      const today = new Date().toISOString().split('T')[0];
+      const today = formatYMDwithOffset(new Date(), 7);
       document.getElementById('datePicker').setAttribute('max', today);
-      document.getElementById('datePicker').value = currentDate.toISOString().split('T')[0];
+      document.getElementById('datePicker').value = formatYMDwithOffset(currentDate, 7);
     }
 
     function fetchHistoricalData() {
@@ -2066,6 +2158,7 @@
       // Load data for the selected date
       fetchHistoricalDataForDate(1, 'Clinic', selectedDate);
       updateChartDateDisplay(1, selectedDate);
+      fetchBillData(1, 'daily', 'Clinic', selectedDate);
 
       closeModal();
     }
@@ -2118,7 +2211,7 @@
         fetchRealTimeData(buildingId, endpoint);
       }, 3000);
 
-      updateChartDateDisplay(buildingId, new Date().toISOString().split('T')[0]);
+      updateChartDateDisplay(buildingId, formatYMDwithOffset(new Date(), 7));
     }
 
     // Fetch real-time data
@@ -2132,121 +2225,112 @@
         updateChartWithDataType(buildingId, data.data);
 
         // Calculate and update daily energy for this building
-        calculateAndUpdateDailyEnergy(buildingId, data.data);
+
       } catch (error) {
         console.error('Error fetching real-time data:', error);
       }
     }
 
-    // ฟังก์ชันคำนวณ Daily Energy ที่แก้ไขแล้ว
-    function calculateAndUpdateDailyEnergy(buildingId, data) {
-      if (!data || !Array.isArray(data) || data.length === 0) {
-        const elementId = buildingId === 1 ? 'daily-energy' : 'dailyValue2';
-        document.getElementById(elementId).textContent = '0.00';
-        return;
-      }
 
-      // จัดเรียงข้อมูลตามเวลา เผื่อ API ส่งลำดับมั่ว
-      data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-      let totalEnergy = 0;
-      let intervalStartTime = null;
-      let powerSum = 0;
-      let countPower = 0;
-
-      data.forEach(entry => {
-        const power = entry.active_power || entry.power || 0;
-        if (power != null && !isNaN(power) && power > 0) {
-          if (!intervalStartTime) {
-            intervalStartTime = new Date(entry.timestamp);
-          }
-          powerSum += power;
-          countPower++;
-
-          const currentTime = new Date(entry.timestamp);
-          const diffMinutes = (currentTime - intervalStartTime) / 1000 / 60;
-
-          if (diffMinutes >= 15) {
-            const avgPower = powerSum / countPower;
-            totalEnergy += avgPower * (15 / 60); // 15 นาที = 0.25 ชั่วโมง
-            // เริ่มช่วงใหม่
-            intervalStartTime = currentTime;
-            powerSum = 0;
-            countPower = 0;
-          }
-        }
-      });
-
-      // ถ้าช่วงสุดท้ายมีข้อมูลแต่ไม่ครบ 15 นาที ก็คิดให้
-      if (countPower > 0) {
-        const avgPower = powerSum / countPower;
-        totalEnergy += avgPower * (15 / 60);
-      }
-
-      const elementId = buildingId === 1 ? 'daily-energy' : 'dailyValue2';
-      document.getElementById(elementId).textContent = totalEnergy.toFixed(2);
-    }
 
     // Update individual chart date display
     function updateChartDateDisplay(buildingId, date) {
       document.getElementById(`dateDisplay${buildingId}`).textContent = `Date: ${date}`;
     }
-
-    // Fetch bill data
-    async function fetchBillData(buildingId, period, endpoint) {
+    async function fetchBillData(buildingId, period, endpoint, date = null) {
       try {
-        const response = await fetch(`https://api-kx4r63rdjq-an.a.run.app/${period}-bill/sensor${endpoint}`);
-        if (!response.ok) throw new Error('Failed to fetch bill data');
-
-        const data = await response.json();
-        const billValue = data.electricity_bill || '-';
-
-        if (period === 'monthly') {
-          document.getElementById(`monthly-energy`).textContent = billValue;
-          document.getElementById(`monthValue2`).textContent = billValue;
-        } else if (period === 'yearly') {
-          document.getElementById(`yearly-energy`).textContent = billValue;
-          document.getElementById(`yearValue2`).textContent = billValue;
+        let url;
+        if (period === 'daily') {
+          const d = (date || formatYMDwithOffset(new Date(), 7));
+          url = `https://api-kx4r63rdjq-an.a.run.app/daily-bill/sensor${endpoint}/${d}`;
+        } else {
+          url = `https://api-kx4r63rdjq-an.a.run.app/${period}-bill/sensor${endpoint}`;
         }
+        if (period === 'monthly') {
+          const d = (date || formatYMDwithOffset(new Date(), 7));
+          url = `https://api-kx4r63rdjq-an.a.run.app/monthly-bill/sensor${endpoint}`;
+        } else {
+          console.log('No monthly date provided')
+        }
+        if (period === 'yearly') {
+          const d = (date || formatYMDwithOffset(new Date(), 7));
+          url = `https://api-kx4r63rdjq-an.a.run.app/yearly-bill/sensor${endpoint}`;
+        } else {
+          console.log('No yearly date provided')
+        }
+
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Failed to fetch ${period} bill`);
+        const data = await res.json();
+
+        // สมมติ API ส่ง { electricity_bill, energy_kwh } (ถ้าไม่มี energy_kwh ก็ไม่อัพเดตส่วน energy)
+        const billValue = (data.electricity_bill ?? '-');
+        const energyValue = (data.total_energy_kwh != null ? Number(data.total_energy_kwh).toFixed(2) : null);
+
+        console.log(`Fetched ${period} bill:`, data);
+
+        // แม็ป id ของการ์ดตามช่วงเวลา
+        const map = {
+          daily: { energyId: 'daily-energy', billId: 'daily-bill' },
+          monthly: { energyId: 'monthly-energy', billId: 'Monthly-Bill' },
+          yearly: { energyId: 'yearly-energy', billId: 'Yearly-Bill' },
+        };
+
+        const ids = map[period];
+        if (!ids) return;
+
+        // อัปเดต "บิล"
+        const billEl = document.getElementById(ids.billId);
+        if (billEl) billEl.textContent = formatBill(billValue);
+
+        // อัปเดต "พลังงานรวม" ถ้า API มีส่งมา
+        if (energyValue !== null) {
+          const energyEl = document.getElementById(ids.energyId);
+          console.log(energyEl)
+          if (energyEl) energyEl.textContent = energyValue;
+
+        }
+
       } catch (error) {
         console.error(`Error fetching ${period} bill:`, error);
-        if (period === 'monthly') {
-          document.getElementById(`monthly-energy`).textContent = 'Error';
-          document.getElementById(`monthValue2`).textContent = 'Error';
-        } else if (period === 'yearly') {
-          document.getElementById(`yearly-energy`).textContent = 'Error';
-          document.getElementById(`yearValue2`).textContent = 'Error';
+        const mapErr = {
+          daily: { energyId: 'daily-energy', billId: 'daily-bill' },
+          monthly: { energyId: 'monthly-energy', billId: 'Monthly-Bill' },
+          yearly: { energyId: 'yearly-energy', billId: 'Yearly-Bill' },
+        };
+        const ids = mapErr[period];
+        if (ids) {
+          const billEl = document.getElementById(ids.billId);
+          if (billEl) billEl.textContent = 'Error';
+          // ไม่ทับค่าพลังงาน ถ้าอยากทับ ให้ปลดคอมเมนต์
+          // const energyEl = document.getElementById(ids.energyId);
+          // if (energyEl) energyEl.textContent = 'Error';
         }
       }
     }
 
+    // จัดรูปแบบค่าบิลให้ดูง่าย (เติมทศนิยม 2 ตำแหน่ง ถ้าเป็นตัวเลข)
+    function formatBill(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n.toFixed(2) : v;
+    }
 
-    // Refresh all data based on current period and date
     function refreshAllData() {
-      // Update bill labels based on period
       updateBillLabels();
 
-      // Fetch appropriate data based on current period
       if (currentPeriod === 'day') {
-        // For daily view, load specific date data
-        const dateStr = currentDate.toISOString().split('T')[0];
-
-        // Load historical data for both buildings
+        const dateStr = formatYMDwithOffset(currentDate, 7);
         fetchHistoricalDataForDate(1, 'Clinic', dateStr);
-
-
-        // Update chart date displays
         updateChartDateDisplay(1, dateStr);
-        updateChartDateDisplay(2, dateStr);
       } else {
-        // For other periods, start real-time monitoring
         startRealTime(1);
-
       }
 
-      // Fetch bill data
+      // เพิ่มดึงบิลทุกครั้ง (รวมรายวันด้วย)
       fetchAllBillData();
     }
+
 
     // Fetch historical data for specific date and calculate daily energy
     async function fetchHistoricalDataForDate(buildingId, endpoint, date) {
@@ -2259,9 +2343,10 @@
 
 
         updateChartWithDataType(buildingId, data.data);
+        if (data.total_energy_kwh != null) {
+          document.getElementById('daily-energy').textContent = Number(data.total_energy_kwh).toFixed(2);
+        }
 
-        // Calculate and update daily energy for the selected date
-        calculateAndUpdateDailyEnergy(buildingId, data.data);
 
       } catch (error) {
         console.error(`Error fetching historical data for building ${buildingId}:`, error);
@@ -2296,13 +2381,28 @@
       });
     }
 
-    // Fetch all bill data
     function fetchAllBillData() {
-      // Always fetch monthly and yearly data
-      fetchBillData(1, 'monthly', 'Clinic');
-      fetchBillData(1, 'yearly', 'Clinic');
+      const endpoint = 'Clinic';
+      const dateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
+      // รายวัน (ใช้ endpoint /daily-bill/sensorClinic/:date)
+      fetchBillData(1, 'daily', endpoint, dateStr);
+
+      // รายเดือน/รายปีตาม endpoint เดิม
+      fetchBillData(1, 'monthly', endpoint);
+      fetchBillData(1, 'yearly', endpoint);
     }
+
+    const TZ_OFFSET_HOURS = 7;
+
+    function checkDayRollover() {
+      const nowKey = todayKey();
+      if (__dayKey && nowKey !== __dayKey) {
+
+        resetDailyNotifications();
+      }
+    }
+
 
     // Initialize everything
     function initialize() {
@@ -2312,8 +2412,13 @@
       // Set initial date display
       updateDateDisplay();
 
-      // Set max date to today for date picker
-      const today = new Date().toISOString().split('T')[0];
+      setupNotifications();
+      // installNotificationHooks(); // ถ้าใช้ ให้เรียกหลัง setupNotifications
+
+      __dayKey = todayKey();              // เก็บวันตอนเริ่ม
+      setInterval(checkDayRollover, 30000);
+
+      const today = todayKey();
       document.getElementById('datePicker').setAttribute('max', today);
 
       // Load initial data
@@ -2360,79 +2465,13 @@
       }
     }
 
-    async function fetchDateRangeData(buildingId, startDate, endDate) {
-      const allData = [];
-      let current = new Date(startDate);
-      const end = new Date(endDate);
-      while (current <= end) {
-        const dateStr = current.toISOString().split('T')[0];
-        const dailyData = await fetchDailyData(buildingId, dateStr);
-        allData.push(...dailyData);
-        current.setDate(current.getDate() + 1);
-      }
-      return allData;
-    }
 
-    // 1. ดึงข้อมูลช่วงวันที่ (วันแรก-วันสุดท้าย ของเดือน หรือ ปี)
-    async function fetchDateRangeDataForEnergy(buildingId, startDate, endDate) {
-      const allDailyEnergies = []; // เก็บพลังงานรายวันแต่ละวัน
 
-      let currentDate = new Date(startDate);
-      const lastDate = new Date(endDate);
 
-      while (currentDate <= lastDate) {
-        const dateStr = currentDate.toISOString().split('T')[0];
-        const dailyData = await fetchDailyData(buildingId, dateStr); // ดึงข้อมูล 15 นาทีรายวัน
-        const dailyEnergy = calculateDailyEnergyFromData(dailyData); // คำนวณพลังงานรายวันจากข้อมูลนี้
-        allDailyEnergies.push(dailyEnergy);
-
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      // รวมพลังงานรายวันทั้งหมดเป็นพลังงานเดือนหรือปี
-      const totalEnergy = allDailyEnergies.reduce((sum, val) => sum + val, 0);
-      return totalEnergy;
-    }
-
-    // 2. ฟังก์ชันคำนวณพลังงานรายวันแบบแยก (ไม่อัพเดต UI)
-    function calculateDailyEnergyFromData(data) {
-      if (!data || !Array.isArray(data) || data.length === 0) return 0;
-      data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-      let totalEnergy = 0;
-      let intervalStartTime = null;
-      let powerSum = 0;
-      let countPower = 0;
-
-      data.forEach(entry => {
-        const power = entry.active_power || entry.power || 0;
-        if (power != null && !isNaN(power) && power > 0) {
-          if (!intervalStartTime) intervalStartTime = new Date(entry.timestamp);
-          powerSum += power;
-          countPower++;
-
-          const currentTime = new Date(entry.timestamp);
-          const diffMinutes = (currentTime - intervalStartTime) / 1000 / 60;
-
-          if (diffMinutes >= 15) {
-            const avgPower = powerSum / countPower;
-            totalEnergy += avgPower * (15 / 60);
-            intervalStartTime = currentTime;
-            powerSum = 0;
-            countPower = 0;
-          }
-        }
-      });
-
-      if (countPower > 0) {
-        const avgPower = powerSum / countPower;
-        totalEnergy += avgPower * (15 / 60);
-      }
-
-      return totalEnergy;
-    }
   </script>
+
   <script>
+
     document.querySelectorAll('.metric-card').forEach(card => {
       card.addEventListener('click', () => {
         const label = card.querySelector('.metric-label');
@@ -2486,26 +2525,6 @@
 
       sky.appendChild(star);
     }
-
-
-    function initialize() {
-      // สร้างกราฟก่อน
-      initializeChart(1);
-
-      // ตั้งค่าระบบแจ้งเตือน (โหลด log/ปุ่ม)
-      setupNotifications();
-
-      // ✅ ติดตั้ง hook ตอนนี้ (ทุกฟังก์ชันพื้นฐานถูกประกาศแล้ว และกราฟถูกสร้างแล้ว)
-      installNotificationHooks();
-
-      // ที่เหลือตามเดิม
-      updateDateDisplay();
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('datePicker').setAttribute('max', today);
-      refreshAllData();
-      setInterval(() => { fetchAllBillData(); }, 60000);
-    }
-
   </script>
 </body>
 

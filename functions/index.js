@@ -1104,67 +1104,92 @@ app.get('/daily-bill/sensorClinic', async (req, res) => {
     }
 });
 
-// Route สำหรับคำนวณค่าไฟฟ้ารายวัน โดยส่งวันที่ทาง path
-app.get('/daily-bill/sensorClinic/:date', async (req, res) => {
-    try {
-        // 1. ดึงวันที่จาก path ถ้าไม่ส่งมาให้ใช้วันที่ปัจจุบัน
-        const selectedDate = req.params.date || new Date().toISOString().split('T')[0];
+// GET /daily-bill/sensorClinic/:date
+app.get('/daily-bill/sensorClinic/:date?', async (req, res) => {
+  try {
+    // 1) รับวันที่ (YYYY-MM-DD); ถ้าไม่ส่ง ใช้วันนี้ (โซนเวลาไทย)
+    const paramDate = req.params.date;
+    const tz = 'Asia/Bangkok';
+    const todayTH = new Date().toLocaleString('en-CA', { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' });
+    // todayTH รูปแบบ "YYYY-MM-DD, HH:MM:SS" ในบาง Node เวอร์ชัน ให้ cut เฉพาะวัน
+    const todayDateOnly = todayTH.slice(0,10);
+    const selectedDate = (paramDate && /^\d{4}-\d{2}-\d{2}$/.test(paramDate)) ? paramDate : todayDateOnly;
 
-        console.log("Fetching data for date:", selectedDate);
+    // 2) ขอบเขตวัน (ตี 00:00–23:59:59 ตามเวลาไทย)
+    const dayStart = new Date(`${selectedDate}T00:00:00+07:00`);
+    const dayEnd   = new Date(`${selectedDate}T23:59:59.999+07:00`);
 
-        // 2. คำนวณช่วงเวลาเริ่มและสิ้นสุดของวัน
-        const dayStart = new Date(`${selectedDate}T00:00:00+07:00`);  // เวลาไทย
-        const dayEnd = new Date(`${selectedDate}T23:59:59+07:00`);
-
-        // 3. ใช้ MongoDB Aggregation
-        const aggregationResult = await clinic_power.aggregate([
-            {
-                $match: {
-                    timestamp: {
-                        $gte: dayStart,
-                        $lt: dayEnd,
-                    },
-                },
-            },
-            {
-                $group: {
-                    _id: null,
-                    totalPower: { $sum: "$power" },
-                },
-            },
-        ]);
-
-        if (!aggregationResult.length) {
-            return res.status(404).json({ error: `No data found for ${selectedDate}` });
+    // 3) คำนวณพลังงานแบบ 15 นาที: avg(power) * 0.25 kWh แล้ว sum ทั้งวัน
+    const pipeline = [
+      {
+        $match: {
+          timestamp: { $gte: dayStart, $lte: dayEnd }
         }
-
-        const totalEnergyKwh = aggregationResult[0].totalPower / 60;
-
-        const calculateElectricityBill = (units) => {
-            const rateTiers = [{ limit: Infinity, rate: 4.4 }];
-            let totalCost = 0;
-            let remainingUnits = units;
-            for (const tier of rateTiers) {
-                if (remainingUnits <= 0) break;
-                const unitsInTier = Math.min(remainingUnits, tier.limit);
-                totalCost += unitsInTier * tier.rate;
-                remainingUnits -= unitsInTier;
+      },
+      // เลือกฟิลด์ power ที่จะใช้ (active_power > power)
+      {
+        $addFields: {
+          _powerKW: { $ifNull: ["$active_power", "$power"] }
+        }
+      },
+      // ตัดข้อมูล null/NaN/<=0 ทิ้ง (ถ้าไม่ต้องการกรองค่าศูนย์ ลบบรรทัดนี้ได้)
+      {
+        $match: { _powerKW: { $gt: 0 } }
+      },
+      // รวมเป็นช่วงละ 15 นาที ตาม timezone ไทย
+      {
+        $group: {
+          _id: {
+            $dateTrunc: {
+              date: "$timestamp",
+              unit: "minute",
+              binSize: 15,
+              timezone: tz
             }
-            return Number(totalCost.toFixed(2));
-        };
+          },
+          avgPowerKW: { $avg: "$_powerKW" }
+        }
+      },
+      // พลังงานของแต่ละช่วง (kWh) = avg(kW) * 0.25
+      {
+        $project: {
+          _id: 0,
+          energyKwhSlot: { $multiply: ["$avgPowerKW", 0.25] }
+        }
+      },
+      // รวมทั้งวัน
+      {
+        $group: {
+          _id: null,
+          totalEnergyKwh: { $sum: "$energyKwhSlot" }
+        }
+      }
+    ];
 
-        const electricityBill = calculateElectricityBill(totalEnergyKwh);
+    const agg = await clinic_power.aggregate(pipeline);
 
-        res.json({
-            date: selectedDate,
-            total_energy_kwh: totalEnergyKwh.toFixed(2),
-            electricity_bill: electricityBill,
-        });
+    // ถ้าไม่มีข้อมูล ส่ง 200 พร้อมค่า 0 จะใช้งานฝั่ง client ง่ายกว่า 404
+    const totalEnergyKwh = agg.length ? agg[0].totalEnergyKwh : 0;
 
-    } catch (err) {
-        console.error('Error calculating daily electricity bill:', err);
-        res.status(500).json({ error: 'Failed to process data' });
-    }
+    // 4) คิดค่าไฟ — ตอนนี้เป็น flat rate 4.40 THB/kWh
+    // สามารถต่อยอดเป็นแบบขั้นบันได/รวม Ft/Service Charge ได้
+    const calculateElectricityBill = (units) => {
+      const rateTHBperKwh = 4.40;
+      return Number((units * rateTHBperKwh).toFixed(2));
+    };
+
+    const electricityBill = calculateElectricityBill(totalEnergyKwh);
+
+    res.json({
+      date: selectedDate,
+      total_energy_kwh: Number(totalEnergyKwh.toFixed(2)),
+      electricity_bill: electricityBill
+    });
+
+  } catch (err) {
+    console.error('Error calculating daily electricity bill:', err);
+    res.status(500).json({ error: 'Failed to process data' });
+  }
 });
 
 
