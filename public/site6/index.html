@@ -23,7 +23,7 @@
       color: #333;
     }
 
-    /* Authentication Modal Styles */
+    /* ---------------- Auth Overlay ---------------- */
     .auth-overlay {
       position: fixed;
       top: 0;
@@ -43,19 +43,19 @@
       position: absolute;
       background: white;
       border-radius: 50%;
-      opacity: 0.8;
+      opacity: .8;
       animation: twinkle infinite alternate;
     }
 
     @keyframes twinkle {
       from {
-        opacity: 0.2;
-        transform: scale(1);
+        opacity: .2;
+        transform: scale(1)
       }
 
       to {
         opacity: 1;
-        transform: scale(1.3);
+        transform: scale(1.3)
       }
     }
 
@@ -63,21 +63,21 @@
       background: white;
       border-radius: 20px;
       padding: 40px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
       text-align: center;
       min-width: 350px;
-      animation: slideUp 0.3s ease;
+      animation: slideUp .3s ease;
     }
 
     @keyframes slideUp {
       from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(30px)
       }
 
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0)
       }
     }
 
@@ -105,7 +105,7 @@
     .auth-subtitle {
       color: #64748b;
       margin-bottom: 30px;
-      font-size: 0.9rem;
+      font-size: .9rem;
     }
 
     .auth-input {
@@ -115,14 +115,14 @@
       border-radius: 10px;
       font-size: 1rem;
       margin-bottom: 20px;
-      transition: all 0.3s ease;
+      transition: all .3s ease;
       text-align: center;
     }
 
     .auth-input:focus {
       outline: none;
       border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, .1);
     }
 
     .auth-button {
@@ -135,13 +135,13 @@
       font-size: 1rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all .3s ease;
       margin-bottom: 15px;
     }
 
     .auth-button:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, .3);
     }
 
     .remember-me {
@@ -150,7 +150,7 @@
       justify-content: center;
       gap: 10px;
       margin-top: 15px;
-      font-size: 0.9rem;
+      font-size: .9rem;
       color: #64748b;
     }
 
@@ -161,7 +161,7 @@
       border-radius: 4px;
       cursor: pointer;
       position: relative;
-      transition: all 0.3s ease;
+      transition: all .3s ease;
     }
 
     .remember-checkbox.checked {
@@ -185,17 +185,18 @@
       color: #dc2626;
       padding: 10px 15px;
       border-radius: 8px;
-      font-size: 0.9rem;
+      font-size: .9rem;
       margin-bottom: 20px;
       display: none;
     }
 
+    /* ---------------- Dashboard Shell ---------------- */
     .dashboard-container {
       max-width: 1400px;
       margin: 0 auto;
       padding: 20px;
       opacity: 0;
-      transition: opacity 0.5s ease;
+      transition: opacity .5s ease;
     }
 
     .dashboard-container.authenticated {
@@ -207,34 +208,28 @@
       margin-bottom: 40px;
     }
 
-    .logo {
-      width: 80px;
-      height: 80px;
+    .logo,
+    .logomain {
       background: white;
       border-radius: 50%;
       margin: 0 auto 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .1);
       font-size: 2rem;
       color: #667eea;
       font-weight: 700;
     }
 
+    .logo {
+      width: 80px;
+      height: 80px;
+    }
+
     .logomain {
       width: 200px;
       height: 200px;
-      background: white;
-      border-radius: 50%;
-      margin: 0 auto 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-      font-size: 2rem;
-      color: #667eea;
-      font-weight: 700;
     }
 
     .main-title {
@@ -242,46 +237,24 @@
       font-size: 2.5rem;
       font-weight: 300;
       margin-bottom: 10px;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, .2);
     }
 
     .subtitle {
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, .8);
       font-size: 1.1rem;
       font-weight: 400;
     }
 
-    /* Logout button */
-    .logout-btn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
-      padding: 10px 15px;
-      border-radius: 8px;
-      cursor: pointer;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
-      font-size: 0.9rem;
-      z-index: 1000;
-    }
-
-    .logout-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
-    }
-
-    /* Date Selector Styles */
+    /* ---------------- Date Selector ---------------- */
     .date-selector {
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, .95);
       backdrop-filter: blur(20px);
       border-radius: 24px;
       padding: 25px;
       margin-bottom: 30px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .1);
+      border: 1px solid rgba(255, 255, 255, .2);
     }
 
     .period-tabs {
@@ -303,7 +276,7 @@
       font-weight: 500;
       color: #64748b;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all .3s ease;
       flex: 1;
       max-width: 120px;
     }
@@ -311,11 +284,11 @@
     .period-tab.active {
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, .3);
     }
 
     .period-tab:hover:not(.active) {
-      background: rgba(102, 126, 234, 0.1);
+      background: rgba(102, 126, 234, .1);
       color: #667eea;
     }
 
@@ -334,7 +307,7 @@
       cursor: pointer;
       padding: 10px;
       border-radius: 50%;
-      transition: all 0.3s ease;
+      transition: all .3s ease;
       width: 45px;
       height: 45px;
       display: flex;
@@ -343,7 +316,7 @@
     }
 
     .nav-arrow:hover {
-      background: rgba(102, 126, 234, 0.1);
+      background: rgba(102, 126, 234, .1);
       transform: scale(1.1);
     }
 
@@ -356,7 +329,7 @@
       cursor: pointer;
       padding: 10px 20px;
       border-radius: 10px;
-      transition: all 0.3s ease;
+      transition: all .3s ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -364,17 +337,18 @@
     }
 
     .current-date:hover {
-      background: rgba(102, 126, 234, 0.05);
+      background: rgba(102, 126, 234, .05);
     }
 
+    /* ---------------- Building Section ---------------- */
     .building-section {
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, .95);
       backdrop-filter: blur(20px);
       border-radius: 24px;
       padding: 30px;
       margin-bottom: 30px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .1);
+      border: 1px solid rgba(255, 255, 255, .2);
     }
 
     .building-header {
@@ -406,11 +380,11 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(34, 197, 94, 0.1);
+      background: rgba(34, 197, 94, .1);
       color: #16a34a;
       padding: 6px 12px;
       border-radius: 20px;
-      font-size: 0.8rem;
+      font-size: .8rem;
       font-weight: 500;
       margin-top: 8px;
     }
@@ -427,11 +401,11 @@
 
       0%,
       100% {
-        opacity: 1;
+        opacity: 1
       }
 
       50% {
-        opacity: 0.5;
+        opacity: .5
       }
     }
 
@@ -450,28 +424,25 @@
       position: relative;
       overflow: hidden;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all .3s ease;
     }
 
     .metric-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, .3);
     }
 
     .metric-card::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .1), transparent);
       border-radius: 16px;
     }
 
     .metric-label {
-      font-size: 0.9rem;
-      opacity: 0.8;
+      font-size: .9rem;
+      opacity: .8;
       margin-bottom: 8px;
       font-weight: 500;
     }
@@ -483,15 +454,16 @@
     }
 
     .metric-unit {
-      font-size: 0.8rem;
-      opacity: 0.7;
+      font-size: .8rem;
+      opacity: .7;
     }
 
+    /* ---------------- Chart ---------------- */
     .chart-container {
       background: white;
       border-radius: 20px;
       padding: 30px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .05);
       margin-bottom: 20px;
     }
 
@@ -512,12 +484,11 @@
       background: #f7fafc;
       padding: 8px 16px;
       border-radius: 20px;
-      font-size: 0.9rem;
+      font-size: .9rem;
       color: #4a5568;
       font-weight: 500;
     }
 
-    /* Data Type Selector Styles */
     .data-type-selector {
       display: flex;
       align-items: center;
@@ -532,26 +503,26 @@
     .selector-label {
       font-weight: 600;
       color: #2d3748;
-      font-size: 0.9rem;
+      font-size: .9rem;
     }
 
     @keyframes gradientShift {
       0% {
         border-color: #0052df;
         color: #0052df;
-        box-shadow: 0 0 5px #0052df;
+        box-shadow: 0 0 5px #0052df
       }
 
       50% {
         border-color: #1e90ff;
         color: #1e90ff;
-        box-shadow: 0 0 15px #1e90ff;
+        box-shadow: 0 0 15px #1e90ff
       }
 
       100% {
         border-color: #0052df;
         color: #0052df;
-        box-shadow: 0 0 5px #0052df;
+        box-shadow: 0 0 5px #0052df
       }
     }
 
@@ -562,11 +533,11 @@
       border: 2px solid #e2e8f0;
       border-radius: 10px;
       background: white;
-      font-size: 0.9rem;
+      font-size: .9rem;
       font-weight: 600;
-      color: #000000;
+      color: #000;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all .3s ease;
       animation: gradientShift 3s infinite;
     }
 
@@ -579,15 +550,9 @@
       outline: none;
     }
 
-
     .data-type-dropdown:focus {
-      outline: none;
       border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    .data-type-dropdown:hover {
-      border-color: #cbd5e0;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, .1);
     }
 
     .chart-canvas-wrapper {
@@ -608,10 +573,10 @@
       border: none;
       padding: 12px 24px;
       border-radius: 25px;
-      font-size: 0.9rem;
+      font-size: .9rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all .3s ease;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -619,7 +584,7 @@
 
     .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, .3);
     }
 
     .btn-secondary {
@@ -627,7 +592,7 @@
     }
 
     .btn-secondary:hover {
-      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.3);
+      box-shadow: 0 8px 25px rgba(6, 182, 212, .3);
     }
 
     .action-bar {
@@ -645,7 +610,7 @@
       border-radius: 12px;
       color: white;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all .3s ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -654,17 +619,15 @@
 
     .action-btn:hover {
       transform: scale(1.1);
-      box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+      box-shadow: 0 8px 25px rgba(240, 147, 251, .4);
     }
 
+    /* ---------------- Modal ---------------- */
     .modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
       backdrop-filter: blur(5px);
       z-index: 1000;
     }
@@ -677,7 +640,7 @@
       background: white;
       padding: 30px;
       border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
       text-align: center;
     }
 
@@ -696,7 +659,7 @@
       font-size: 1rem;
       text-align: center;
       margin-bottom: 20px;
-      transition: border-color 0.3s ease;
+      transition: border-color .3s ease;
     }
 
     .date-input:focus {
@@ -732,283 +695,231 @@
 
     @keyframes spin {
       to {
-        transform: rotate(360deg);
+        transform: rotate(360deg)
       }
     }
 
-    /* Mobile Responsive Design (มือถือ) */
-    @media (max-width: 767px) {
-      .dashboard-container {
-        padding: 8px;
-      }
-
-      .auth-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 110%;
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(10px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-      }
-
-
-      .auth-modal {
-        margin: 20px;
-        padding: 30px 25px;
-        min-width: auto;
-        min-height: 50px;
-        width: calc(100% - 40px);
-      }
-
-      .main-title {
-        font-size: 2rem;
-      }
-
-      .building-section,
-      .date-selector {
-        padding: 20px;
-      }
-
-      .period-tabs {
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .period-tab {
-        max-width: none;
-      }
-
-      .date-navigation {
-        gap: 20px;
-      }
-
-      .current-date {
-        font-size: 0.9rem;
-        min-width: 150px;
-      }
-
-      .metrics-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .metric-card {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 16px;
-        padding: 25px;
-        color: white;
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-
-      .metric-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
-      }
-
-      .metric-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-        border-radius: 16px;
-      }
-
-      .metric-label {
-        font-size: 0.8rem;
-        opacity: 0.8;
-        margin-bottom: 8px;
-        font-weight: 500;
-      }
-
-      .metric-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 5px;
-      }
-
-      .metric-unit {
-        font-size: 0.8rem;
-        opacity: 0.7;
-      }
-
-      .metric-Bill {
-        font-size: 0.8rem;
-        opacity: 0.7;
-        margin-bottom: 10px;
-      }
-
-      .chart-canvas-wrapper {
-        width: 120%;
-        height: 100%;
-        margin-left: -10%;
-      }
-
-      .chart-controls {
-        flex-direction: column;
-      }
-
-      .action-bar {
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      .chart-container {
-        background: white;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
-      }
-
-      .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0px;
-      }
-
-      .chart-title {
-        font-size: 0.6rem;
-        font-weight: 800;
-        color: #2d3748;
-      }
-
-      .modal-content {
-        margin: 20px;
-        padding: 25px 20px;
-        border-radius: 16px;
-        max-width: 90vw;
-      }
-
-      .date-input {
-        width: 100%;
-        max-width: 250px;
-      }
-
-      .modal-buttons {
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .modal-buttons .btn {
-        width: 100%;
-      }
-
-      .data-type-selector {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        margin-bottom: 10px;
-        padding: 7px 10px;
-        background: #f8fafc;
-        border-radius: 7px;
-        border: 1px solid #e2e8f0;
-      }
-
-
-      .selector-label {
-        font-weight: 400;
-        color: #2d3748;
-        font-size: 0.6rem;
-      }
-
-      .data-type-dropdown {
-        flex: 1;
-        max-width: 100px;
-        padding: 5px 7px;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        background: white;
-        font-size: 0.6rem;
-        font-weight: 600;
-        color: #000000;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        animation: gradientShift 3s infinite;
-      }
-
-      .date-display {
-        background: #f7fafc;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 0.5rem;
-        color: #4a5568;
-        font-weight: 500;
-      }
-
+    /* ---------------- Top Actions (Logout + Bell) ---------------- */
+    .top-actions {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1100;
     }
 
-    /* Tablet Responsive Design (iPad) */
-    @media (min-width: 768px) and (max-width: 1024px) {
-      .dashboard-container {
-        padding: 20px 30px;
-        max-width: 1000px;
-      }
-
-      .main-title {
-        font-size: 2.2rem;
-      }
-
-      .period-tabs {
-        gap: 12px;
-      }
-
-      .metrics-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      }
-
-      .chart-canvas-wrapper {
-        width: 100% !important;
-        height: 300px !important;
-        margin: 0 auto;
-      }
-
-      .btn {
-        padding: 14px 28px;
-        font-size: 1rem;
-      }
-
-      .data-type-dropdown {
-        max-width: none;
-        font-size: 0.8rem;
-        /* ลดขนาดฟอนต์ลง */
-        padding: 8px 12px;
-        /* ลด padding */
-        height: auto;
-        /* ปรับความสูงให้พอดี */
-      }
-    }
-
-    #backButton {
-      font-size: 2rem;
-      color: #667eea;
-      text-decoration: none;
-      user-select: none;
+    .logout-btn {
+      background: rgba(255, 255, 255, .2);
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
       cursor: pointer;
-      padding-right: 0.5rem;
-      margin-left: 20px;
+      backdrop-filter: blur(10px);
+      transition: all .3s ease;
+      font-size: .9rem;
     }
 
-    /* Dark Mode Support */
-    @media (prefers-color-scheme: dark) {
+    .logout-btn {
+      order: 2;
+      /* ไปขวาสุด */
+    }
+
+    #notifyBell.notify-bell {
+      order: 1;
+      /* อยู่ซ้ายกว่า logout */
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, .3);
+      transform: translateY(-2px);
+    }
+
+    /* ---------------- Notification (Bell + Panel) ---------------- */
+    /* ตัวแปรสีเฉพาะ Notification (จะสลับใน Dark ผ่าน :root ด้านล่าง) */
+    :root {
+      --bell-bg: rgba(255, 255, 255, .85);
+      --bell-fg: #1f2937;
+      --bell-bg-hover: rgba(255, 255, 255, 1);
+      --panel-bg: rgba(255, 255, 255, .98);
+      --panel-border: rgba(0, 0, 0, .06);
+      --panel-fg: #1f2937;
+      --item-bg: #f8fafc;
+      --item-border: #e2e8f0;
+      --item-fg: #1f2937;
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, .18);
+    }
+
+    @media (prefers-color-scheme:dark) {
+      :root {
+        --bell-bg: rgba(255, 255, 255, .12);
+        --bell-fg: #fff;
+        --bell-bg-hover: rgba(255, 255, 255, .2);
+        --panel-bg: rgba(45, 55, 72, .95);
+        --panel-border: rgba(255, 255, 255, .10);
+        --panel-fg: #f7fafc;
+        --item-bg: #2d3748;
+        --item-border: #475569;
+        --item-fg: #f7fafc;
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, .35);
+      }
+    }
+
+    #notifyBell.notify-bell {
+      position: relative;
+      /* ให้ badge อิงตำแหน่งปุ่ม */
+      width: 46px;
+      height: 46px;
+      border: none;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bell-bg);
+      color: var(--bell-fg);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, .12);
+      transition: transform .15s ease, background .2s ease, box-shadow .2s ease;
+      font-size: 1.1rem;
+    }
+
+    #notifyBell.notify-bell:hover {
+      transform: translateY(-1px);
+      background: var(--bell-bg-hover);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, .18);
+    }
+
+    #notifyBadge.notify-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 12px;
+      line-height: 20px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, .15);
+    }
+
+    #notifyPanel.notify-panel {
+      position: fixed;
+      top: 72px;
+      right: 16px;
+      z-index: 1200;
+      width: min(340px, calc(100vw - 24px));
+      max-height: 60vh;
+      overflow: auto;
+      background: var(--panel-bg);
+      color: var(--panel-fg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      display: none;
+      backdrop-filter: blur(12px);
+    }
+
+    .notify-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    #notifyClear.notify-clear {
+      border: none;
+      background: transparent;
+      color: #64748b;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    #notifyClear.notify-clear:hover {
+      opacity: .85;
+    }
+
+    #notifyList.notify-list {
+      padding: 10px;
+    }
+
+    .notify-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 12px;
+      background: var(--item-bg);
+      border: 1px solid var(--item-border);
+      color: var(--item-fg);
+      font-size: .92rem;
+    }
+
+    .notify-item .icon {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .notify-item.item-max {
+      border-left: 4px solid #ef4444;
+      background: linear-gradient(135deg, rgba(239, 68, 68, .12), rgba(239, 68, 68, .05));
+    }
+
+    .notify-item.item-min {
+      border-left: 4px solid #3b82f6;
+      background: linear-gradient(135deg, rgba(59, 130, 246, .12), rgba(59, 130, 246, .05));
+    }
+
+    .notify-item.item-peak {
+      border-left: 4px solid #22c55e;
+      background: linear-gradient(135deg, rgba(34, 197, 94, .12), rgba(34, 197, 94, .05));
+    }
+
+    .notify-item.item-anom {
+      border-left: 4px solid #f97316;
+      background: linear-gradient(135deg, rgba(249, 115, 22, .12), rgba(249, 115, 22, .05));
+    }
+
+    .icon-max {
+      background: linear-gradient(135deg, #ef4444, #fb7185);
+    }
+
+    .icon-min {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    }
+
+    .icon-peak {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+
+    .icon-anom {
+      background: linear-gradient(135deg, #f97316, #ef4444);
+    }
+
+    /* ---------------- Dark Scheme (ส่วนพื้นหลังหลัก) ---------------- */
+    @media (prefers-color-scheme:dark) {
       body {
         background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
       }
 
       .building-section,
       .date-selector {
-        background: rgba(45, 55, 72, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(45, 55, 72, .95);
+        border: 1px solid rgba(255, 255, 255, .1);
       }
 
       .chart-container {
@@ -1062,200 +973,213 @@
         border-color: #718096;
         color: #f7fafc;
       }
+    }
 
-      .notify-bell {
-        position: fixed;
-        top: 20px;
-        right: 120px;
-        z-index: 1000;
-        width: 46px;
-        height: 46px;
-        border: none;
-        cursor: pointer;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
+    /* ---------------- Mobile ---------------- */
+    @media (max-width:767px) {
+      .dashboard-container {
+        padding: 8px;
+      }
+
+      .auth-overlay {
+        height: 110%;
+        background: rgba(0, 0, 0, .8);
         backdrop-filter: blur(10px);
-        transition: all .2s ease;
-        font-size: 1.1rem;
       }
 
-      .notify-bell:hover {
-        transform: translateY(-2px);
-        background: rgba(255, 255, 255, 0.3);
+      .auth-modal {
+        margin: 20px;
+        padding: 30px 25px;
+        min-width: auto;
+        min-height: 50px;
+        width: calc(100% - 40px);
       }
 
-      .notify-badge {
-        position: absolute;
-        top: -6px;
-        right: -6px;
-        min-width: 20px;
-        height: 20px;
-        padding: 0 6px;
-        background: #ef4444;
-        color: #fff;
-        font-size: 12px;
-        border-radius: 999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 0 2px rgba(0, 0, 0, .2);
+      .main-title {
+        font-size: 2rem;
       }
 
-      .notify-panel {
-        position: fixed;
-        top: 76px;
-        right: 20px;
-        z-index: 1000;
-        width: 320px;
-        max-height: 60vh;
-        overflow: auto;
-        background: rgba(255, 255, 255, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
-        backdrop-filter: blur(12px);
+      .building-section,
+      .date-selector {
+        padding: 20px;
       }
 
-      .notify-panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 14px;
-        font-weight: 600;
+      .period-tabs {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .current-date {
+        font-size: .9rem;
+        min-width: 150px;
+      }
+
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-label {
+        font-size: .8rem;
+      }
+
+      .metric-value {
+        font-size: 1.5rem;
+      }
+
+      .chart-canvas-wrapper {
+        width: 120%;
+        height: 100%;
+        margin-left: -10%;
+      }
+
+      .chart-controls {
+        flex-direction: column;
+      }
+
+      .action-bar {
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .chart-container {
+        margin-bottom: 20px;
+      }
+
+      .chart-header {
+        margin-bottom: 0;
+      }
+
+      .chart-title {
+        font-size: .6rem;
+        font-weight: 800;
         color: #2d3748;
-        border-bottom: 1px solid rgba(0, 0, 0, .06);
       }
 
-      .notify-clear {
-        border: none;
-        background: transparent;
-        color: #64748b;
-        cursor: pointer;
+      .modal-content {
+        margin: 20px;
+        padding: 25px 20px;
+        border-radius: 16px;
+        max-width: 90vw;
       }
 
-      .notify-list {
-        padding: 8px 10px;
+      .date-input {
+        width: 100%;
+        max-width: 250px;
       }
 
-      .notify-item {
-        display: flex;
+      .modal-buttons {
+        flex-direction: column;
         gap: 10px;
-        padding: 10px;
-        border-radius: 10px;
-        margin: 6px 0;
-        background: #f8fafc;
+      }
+
+      .modal-buttons .btn {
+        width: 100%;
+      }
+
+      .data-type-selector {
+        gap: 7px;
+        margin-bottom: 10px;
+        padding: 7px 10px;
+        border-radius: 7px;
         border: 1px solid #e2e8f0;
-        font-size: .9rem;
-        color: #1f2937;
       }
 
-      .notify-item .icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 28px;
+      .selector-label {
+        font-weight: 400;
+        color: #2d3748;
+        font-size: .6rem;
       }
 
-      /* สีพื้นหลัง/ขอบของการแจ้งเตือนแต่ละชนิด */
-      .notify-item.item-max {
-        /* MAX = แดงอมชมพู */
-        background: linear-gradient(135deg, rgba(239, 68, 68, .12), rgba(239, 68, 68, .05));
-        border-left: 4px solid #ef4444;
+      .data-type-dropdown {
+        flex: 1;
+        max-width: 100px;
+        padding: 5px 7px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: white;
+        font-size: .6rem;
+        font-weight: 600;
       }
 
-      .notify-item.item-min {
-        /* MIN = ฟ้า */
-        background: linear-gradient(135deg, rgba(59, 130, 246, .12), rgba(59, 130, 246, .05));
-        border-left: 4px solid #3b82f6;
+      .date-display {
+        background: #f7fafc;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: .5rem;
+        color: #4a5568;
+        font-weight: 500;
       }
 
-      .notify-item.item-peak {
-        /* พลังงานรายวันสูงสุด */
-        background: linear-gradient(135deg, rgba(34, 197, 94, .12), rgba(34, 197, 94, .05));
-        border-left: 4px solid #22c55e;
+      /* Top actions on small screens */
+      .top-actions {
+        top: 10px;
+        right: 10px;
+        gap: 8px;
       }
 
-      .notify-item.item-anom {
-        /* anomaly อื่น ๆ */
-        background: linear-gradient(135deg, rgba(249, 115, 22, .12), rgba(249, 115, 22, .05));
-        border-left: 4px solid #f97316;
+      .logout-btn {
+        padding: 8px 12px;
+        font-size: .85rem;
       }
 
-      /* สีพื้นของกล่องไอคอน */
-      .icon-max {
-        background: linear-gradient(135deg, #ef4444, #fb7185);
-        color: #fff;
+      #notifyBell.notify-bell {
+        width: 42px;
+        height: 42px;
       }
 
-      .icon-min {
-        background: linear-gradient(135deg, #3b82f6, #60a5fa);
-        color: #fff;
+      #notifyPanel.notify-panel {
+        right: 8px;
+        width: calc(100vw - 16px);
+      }
+    }
+
+    /* ---------------- Tablet ---------------- */
+    @media (min-width:768px) and (max-width:1024px) {
+      .dashboard-container {
+        padding: 20px 30px;
+        max-width: 1000px;
       }
 
-      .icon-peak {
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        color: #fff;
+      .main-title {
+        font-size: 2.2rem;
       }
 
-      .icon-anom {
-        background: linear-gradient(135deg, #f97316, #ef4444);
-        color: #fff;
+      .period-tabs {
+        gap: 12px;
       }
 
-
-      .icon-peak {
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        color: #fff;
+      .metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       }
 
-      .icon-anom {
-        background: linear-gradient(135deg, #f97316, #ef4444);
-        color: #fff;
+      .chart-canvas-wrapper {
+        width: 100% !important;
+        height: 300px !important;
+        margin: 0 auto;
       }
 
-      .toast {
-        position: fixed;
-        left: 50%;
-        transform: translateX(-50%);
-        bottom: 24px;
-        z-index: 1000;
-        background: rgba(17, 24, 39, .92);
-        color: #fff;
-        padding: 10px 14px;
-        border-radius: 12px;
-        font-size: .9rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+      .btn {
+        padding: 14px 28px;
+        font-size: 1rem;
       }
 
-      @media (prefers-color-scheme: dark) {
-        .notify-panel {
-          background: rgba(45, 55, 72, 0.95);
-          border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .notify-panel-header {
-          color: #f7fafc;
-          border-bottom-color: rgba(255, 255, 255, 0.08);
-        }
-
-        .notify-item {
-          background: #2d3748;
-          border-color: #475569;
-          color: #f7fafc;
-        }
-
-        .notify-bell {
-          background: rgba(255, 255, 255, 0.12);
-        }
+      .data-type-dropdown {
+        max-width: none;
+        font-size: .8rem;
+        padding: 8px 12px;
+        height: auto;
       }
+    }
 
+    /* ---------------- Misc ---------------- */
+    #backButton {
+      font-size: 2rem;
+      color: #667eea;
+      text-decoration: none;
+      user-select: none;
+      cursor: pointer;
+      padding-right: .5rem;
+      margin-left: 20px;
     }
 
     .User {
@@ -1265,16 +1189,11 @@
       text-align: center;
       margin: 20px 0;
       letter-spacing: 1px;
-      font-family: 'Inter', sans-serif;
-
       display: inline-block;
       padding: 5px 20px;
       border-radius: 12px;
-
-      border: 2px solid rgba(255, 255, 255, 0.7);
-      /* กรอบสีขาวโปร่ง */
+      border: 2px solid rgba(255, 255, 255, .7);
       background: transparent;
-      /* ไม่มีพื้นหลัง */
     }
   </style>
 </head>
@@ -1306,15 +1225,20 @@
     </div>
   </div>
 
-  <!-- Logout Button -->
-  <button id="logoutBtn" class="logout-btn" onclick="logout()" style="display: none;">
-    <i class="fas fa-sign-out-alt"></i> Logout
-  </button>
-  <!-- Notification Bell -->
-  <button id="notifyBell" class="notify-bell" title="Notifications">
-    <i class="fas fa-bell"></i>
-    <span id="notifyBadge" class="notify-badge" style="display:none;">0</span>
-  </button>
+  <div class="top-actions">
+    <!-- Logout Button -->
+    <button id="logoutBtn" class="logout-btn" onclick="logout()" style="display: none;">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+
+    <!-- Notification Bell -->
+    <button id="notifyBell" class="notify-bell" title="Notifications">
+      <i class="fas fa-bell"></i>
+      <span id="notifyBadge" class="notify-badge" style="display:none;">0</span>
+    </button>
+  </div>
+
+
 
   <!-- Notification Panel -->
   <div id="notifyPanel" class="notify-panel" style="display:none;">
@@ -1630,6 +1554,27 @@
       toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3500);
     }
 
+    // ---- De-dup helpers ----
+    function getSeenKeyForDay(dayKey) {
+      // แยก seen ตามวัน เพื่อให้ข้ามวันเริ่มนับใหม่
+      return `momaySeen_${dayKey}`;
+    }
+    function readSeenSet(dayKey) {
+      try {
+        const raw = localStorage.getItem(getSeenKeyForDay(dayKey));
+        const arr = raw ? JSON.parse(raw) : [];
+        return new Set(arr);
+      } catch { return new Set(); }
+    }
+    function writeSeenSet(dayKey, seenSet) {
+      localStorage.setItem(getSeenKeyForDay(dayKey), JSON.stringify([...seenSet]));
+    }
+    function makeAlertId(dayKey, type, message) {
+      // ป้องกัน \n หรือเว้นวรรคแปลกๆทำให้ id ไม่ตรง
+      const msg = (message || '').replace(/\s+/g, ' ').trim();
+      return `${dayKey}|${type}|${msg}`;
+    }
+
     function updateSoundBtnUI() {
       const b = document.getElementById('toggleSoundBtn');
       if (b) b.textContent = `Sound: ${soundEnabled ? 'On' : 'Off'}`;
@@ -1650,21 +1595,34 @@
     snd.play().catch(() => { /* เงียบถ้าโดนบล็อค */ });
 
     // แทนที่ฟังก์ชันเดิมทั้งหมด
-    function addInAppAlert(type, message, tsArg) {
-      const tsObj = tsArg ? new Date(tsArg) : new Date();
-      const alert = {
-        type,
-        message,
-        ts: tsObj.toLocaleString(),
-        dayKey: todayKey(),          // ✅ บังคับให้อยู่วันปัจจุบันเสมอ
-      };
+    function addInAppAlert(type, message) {
+      const now = new Date();
+      const dayKey = dayKeyFromDate(now); // ⬅️ ใช้วันปัจจุบัน
+      const tsText = now.toLocaleString();
+
+      // กันซ้ำด้วย seen-set ต่อวัน
+      const seen = readSeenSet(dayKey);
+      const id = makeAlertId(dayKey, type, message);
+      if (seen.has(id)) {
+        // ซ้ำแล้ว ไม่ต้องเพิ่ม/ไม่ต้องเรนเดอร์ใหม่
+        return;
+      }
+
+      const alert = { type, message, ts: tsText, dayKey, id };
       inAppAlerts.unshift(alert);
       inAppAlerts = inAppAlerts.slice(0, ALERT_RULES.keepLastAlerts);
-      localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
 
-      renderAlertList();             // ให้ไปกรองตอน render
+      // บันทึกทั้งรายการและ seen
+      localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
+      seen.add(id);
+      writeSeenSet(dayKey, seen);
+
+      renderAlertList(); // ให้ไปกรองตอน render
       playAlertSound(type);
     }
+    // ให้ไปกรองตอน render
+
+
 
     function renderAlertList(selectedDayKey) {
       const list = document.getElementById('notifyList');
@@ -1746,16 +1704,15 @@
     }
 
     function resetDailyNotifications() {
-      // ไม่ลบประวัติทั้งหมด แค่ทำให้ “วันนี้” ว่าง
       __dayKey = todayKey();
       movingBufferByBuilding = {};
       lastTimestampByBuilding = {};
 
-      // เคลียร์ peak key ของวันก่อน (ถ้าใช้ key ตามวัน)
-      const peakKeyYesterday = `momay_peak_${ALERT_RULES.endpointKey}_${__dayKey}`; // วันใหม่ใช้ key ใหม่อยู่แล้ว
-      // ไม่ต้องลบของวันนี้ เพราะยังไม่มี
+      // ล้าง seen ของวันก่อนหน้า เพื่อไม่ไปทับวันใหม่
+      const yesterday = alertFilterDayKey || todayKey(); // เผื่อกรองอยู่ที่วันก่อน
+      localStorage.removeItem(getSeenKeyForDay(yesterday));
 
-      renderAlertList();  // จะทำให้ badge เป็น 0 เพราะกรองเฉพาะวันนี้
+      renderAlertList();
       showToast('Notifications reset for new day');
     }
 
@@ -1768,8 +1725,27 @@
 
     function loadInAppAlerts() {
       try {
-        inAppAlerts = JSON.parse(localStorage.getItem('momayAlerts') || '[]');
-      } catch { inAppAlerts = []; }
+        const raw = JSON.parse(localStorage.getItem('momayAlerts') || '[]');
+        // ล้างของซ้ำต่อวันจากข้อมูลเดิม
+        const byId = new Map();
+        for (const a of raw) {
+          const dKey = a.dayKey || dayKeyFromDate(new Date()); // เผื่ออันเก่าไม่มี dayKey
+          const id = a.id || makeAlertId(dKey, a.type, a.message);
+          if (!byId.has(id)) byId.set(id, { ...a, dayKey: dKey, id });
+        }
+        inAppAlerts = [...byId.values()].sort((x, y) => new Date(y.ts) - new Date(x.ts));
+
+        // sync seen-sets สำหรับ “วันปัจจุบัน” เท่านั้น (วันเก่าไม่จำเป็น)
+        const today = todayKey();
+        const todaySeen = readSeenSet(today);
+        inAppAlerts.filter(a => a.dayKey === today).forEach(a => todaySeen.add(a.id));
+        writeSeenSet(today, todaySeen);
+
+        // บันทึกกลับ
+        localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
+      } catch {
+        inAppAlerts = [];
+      }
     }
 
     function setupNotifications() {
@@ -1791,11 +1767,16 @@
       }
       if (clearBtn) {
         clearBtn.addEventListener('click', () => {
+          // ลบเฉพาะรายการของวันปัจจุบันออกจาก inAppAlerts
           const today = todayKey();
-          inAppAlerts = inAppAlerts.filter(a => a.dayKey !== today); // ✅ ลบของวันนี้เท่านั้น
+          inAppAlerts = inAppAlerts.filter(a => a.dayKey !== today);
           localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
+
+          // ล้าง seen ของวันนี้
+          localStorage.removeItem(getSeenKeyForDay(today));
+
           renderAlertList();
-          showToast(`Cleared today's notifications`);
+          showToast('Notifications cleared');
         });
       }
       // คลิกนอก panel เพื่อปิด
