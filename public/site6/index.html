@@ -1381,15 +1381,11 @@
           </div>
         </div>
 
-        <div id="powerExtremaToday" style="font-size:.9rem;opacity:.8;">
-          Min: <span id="powerMinToday">-</span> kW ·
-          Max: <span id="powerMaxToday">-</span> kW
-        </div>
 
         <div class="metrics-grid">
 
           <div class="metric-card" id="billBox1"
-            data-description="การใช้พลังงานไฟฟ้าของวันนี้&#10;คำนวนจาก&#10;การรวมค่ากำลังไฟฟ้าทุก 15 นาที x 0.25 ชั่วโมง แล้วบวกสะสมไปจนครบ 24 ชั่วโมง เพื่อหาพลังงานรวมในหน่วย kWh">
+            data-description="การใช้พลังงานไฟฟ้าของวันนี้&#10;คำนวนจาก&#10;การรวมค่ากำลังไฟฟ้าทุก 15 นาที x 0.25 ชั่วโมง แล้วบวกสะสมไปจนครบ 24 ชั่วโมง เพื่อหาพลังงานรวมในหน่วย kWh &#10;&#10; ค่าไฟฟ้าของวันนี้ = การใช้พลังงานไฟฟ้าของวันนี้ x ค่าไฟฟ้าหน่วยละ 4.4 บาท">
             <div class="metric-label">Daily Energy</div>
             <div style="display: flex; align-items: baseline; gap: 4px;">
               <div class="metric-value" id="daily-energy">-</div>
@@ -1407,7 +1403,7 @@
 
 
           <div class="metric-card" id="monthBox1"
-            data-description="การใช้พลังงานไฟฟ้าของเดือนนี้&#10;คำนวนจาก&#10;การนำค่าพลังงานรวมของแต่ละวัน x จำนวนวันของเดือนนั้นๆ">
+            data-description="การใช้พลังงานไฟฟ้าของเดือนนี้&#10;คำนวนจาก&#10;การนำค่าพลังงานรวมของแต่ละวัน x จำนวนวันของเดือนนั้นๆ &#10;&#10; ค่าไฟฟ้าของเดือนนี้ = การใช้พลังงานไฟฟ้าของเดือนนี้ x ค่าไฟฟ้าหน่วยละ 4.4 บาท">
             <div class="metric-label">Monthly Energy</div>
             <div style="display: flex; align-items: baseline; gap: 4px;">
               <div class="metric-value" id="monthly-energy">-</div>
@@ -1422,7 +1418,7 @@
 
 
           <div class="metric-card" id="yearBox1"
-            data-description="การใช้พลังงานไฟฟ้าของปีนี้&#10;คำนวนจาก&#10;การนำค่าพลังงานรวมของแต่ละเดือน x 12">
+            data-description="การใช้พลังงานไฟฟ้าของปีนี้&#10;คำนวนจาก&#10;การนำค่าพลังงานรวมของแต่ละเดือน x 1 2&#10;&#10; ค่าไฟฟ้าของปีนี้ = การใช้พลังงานไฟฟ้าของปีนี้ x ค่าไฟฟ้าหน่วยละ 4.4 บาท">
             <div class="metric-label">Yearly Energy</div>
             <div style="display: flex; align-items: baseline; gap: 4px;">
               <div class="metric-value" id="yearly-energy">-</div>
@@ -1434,6 +1430,24 @@
               <div class="metric-unit">THB</div>
             </div>
           </div>
+
+          <div class="metric-card" id="powerExtremaBox1"
+            data-description="ค่าสูงสุดและต่ำสุดของกำลังไฟฟ้า (Power) รายวัน&#10;ดึงจากเซ็นเซอร์ตลอด 24 ชั่วโมงของวันนั้น&#10;&#10;ค่า Min: ต่ำสุดของ power ตลอดวัน&#10;ค่า Max: สูงสุดของ power ตลอดวัน">
+            <div class="metric-label">Power Min (Today)</div>
+            <div style="display: flex; align-items: baseline; gap: 4px;">
+              <div class="metric-value" id="power-min-today">-</div>
+              <div class="metric-unit">kW</div>
+            </div>
+            <div class="metric-label">Power Max (Today)</div>
+            <div style="display: flex; align-items: baseline; gap: 4px;">
+              <div class="metric-value" id="power-max-today">-</div>
+              <div class="metric-unit">kW</div>
+            </div>
+          </div>
+
+
+
+
         </div>
 
         <div class="chart-container">
@@ -1507,22 +1521,16 @@
       }
     }
 
-    // ------------------ CONFIG: กฎ/เกณฑ์แจ้งเตือน ------------------
+    //maxpower
+    let maxPowerByDate = {};
+
     const ALERT_RULES = {
-      allowedHours: { start: 0, end: 23.59 },          // แจ้งเฉพาะ 00:00–23:59
-      voltageRange: { min: 200, max: 250 },         // V
-      currentMax: 80,                                // A
-      powerSpikePct: 50,                             // เพิ่มขึ้น > % จากค่าเฉลี่ย 5 นาที
-      keepLastAlerts: 50,                            // เก็บ log ใน localStorage
-      endpointKey: 'Clinic',  // ใช้กับคีย์ localStorage ต่อวัน
+      voltage: { min: 200, max: 250 },   // ปกติอยู่ในช่วง 220-240V
+      current: { min: 0, max: 100 },     // แล้วแต่โหลดที่คาดหวัง
+      power: { min: 0, max: 22000 },   // กำลังสูงสุดตามระบบ
 
-      // ▼ ใหม่: แจ้งเตือนค่าสูงสุด/ต่ำสุดของ Power รายวัน
-      powerExtrema: {
-        enabled: true,
-        epsilonKW: 0.001,   // กันเด้งรัว ๆ จากสวิงเล็ก ๆ (เช่น 0.210 ↔ 0.211)
-        seedSilence: true   // true = ไม่เด้งตอน “ค่าแรกของวัน” ถูกบันทึก (กัน spam ตอนเที่ยงคืน)
-      },
-
+      allowedHours: { start: 8, end: 22 }, // เวลาแจ้งเตือน (เช้า-ค่ำ)
+      keepLastAlerts: 10,
     };
 
     // ------------------ STATE ------------------
@@ -1530,6 +1538,9 @@
     let lastTimestampByBuilding = {}; // {1: '2025-...'}
     let movingBufferByBuilding = {};  // เก็บค่า power นาทีล่าสุด (สูงสุด ~5 นาที)
     let inAppAlerts = [];             // แสดงในพาเนล
+    let lastPowerByBuilding = {};
+    let lastSpikeAt = {};
+
 
     // ------------------ Utilities ------------------
     function withinNotifyHours(d = new Date()) {
@@ -1542,6 +1553,15 @@
       if (!('Notification' in window)) return;
       Notification.requestPermission().then(p => { notifEnabled = (p === 'granted'); });
     }
+
+    // ใช้ key แบบเดียวกับ UI (มี TZ_OFFSET_HOURS ของคุณ)
+    function dayKeyFromDate(d) {
+      return formatYMDwithOffset(d, TZ_OFFSET_HOURS); // คืนค่า "YYYY-MM-DD"
+    }
+
+    // เก็บ “วันปัจจุบันที่ panel กำลังกรองอยู่”
+    let alertFilterDayKey = dayKeyFromDate(new Date());
+
     function showSystemNotification(title, body) {
       if (notifEnabled && withinNotifyHours()) {
         try { new Notification(title, { body }); } catch { }
@@ -1559,27 +1579,34 @@
       t.style.display = 'block';
       toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3500);
     }
-    function addInAppAlert(type, message) {
+    function addInAppAlert(type, message, tsArg, dayKeyArg) {
+      const tsObj = tsArg ? new Date(tsArg) : new Date();
       const alert = {
         type,
         message,
-        ts: new Date().toLocaleString(),
-        dayKey: todayKey()                // ⬅️ ผูกวันไว้กับรายการ
+        ts: tsObj.toLocaleString(),
+        dayKey: dayKeyArg || dayKeyFromDate(tsObj)
       };
       inAppAlerts.unshift(alert);
       inAppAlerts = inAppAlerts.slice(0, ALERT_RULES.keepLastAlerts);
       localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
-      renderAlertList();                  // ให้ไปกรองตอน render
+      renderAlertList(alertFilterDayKey);
     }
-    function renderAlertList() {
-      const list = document.getElementById('notifyList');
-      if (!list) return;
 
-      const tKey = todayKey();
-      const todays = inAppAlerts.filter(a => a.dayKey === tKey);
+
+
+
+
+    function renderAlertList(selectedDayKey) {
+      const list = document.getElementById('notifyList');
+      const panel = document.getElementById('notifyPanel');
+      if (!list || !panel) return;
+
+      const key = selectedDayKey || alertFilterDayKey || dayKeyFromDate(new Date());
+      const rows = inAppAlerts.filter(a => a.dayKey === key);
 
       list.innerHTML = '';
-      todays.forEach(a => {
+      rows.forEach(a => {
         const iconMap = { max: 'icon-max', min: 'icon-min', peak: 'icon-peak', anom: 'icon-anom' };
         const itemMap = { max: 'item-max', min: 'item-min', peak: 'item-peak', anom: 'item-anom' };
         const iconCls = iconMap[a.type] || 'icon-anom';
@@ -1595,11 +1622,93 @@
         list.appendChild(div);
       });
 
+      panel.style.display = rows.length ? 'block' : 'none';
+
       const badge = document.getElementById('notifyBadge');
       if (badge) {
-        const cnt = todays.length;
-        if (cnt > 0) { badge.textContent = cnt; badge.style.display = 'inline-flex'; }
+        if (rows.length) { badge.textContent = rows.length; badge.style.display = 'inline-flex'; }
         else { badge.style.display = 'none'; }
+      }
+    }
+
+
+    async function loadPowerExtremaCard(dateStr) {
+      try {
+        const res = await fetch(
+          `https://api-kx4r63rdjq-an.a.run.app/daily-energy/sensorClinic?date=${dateStr}&_=${Date.now()}`,
+          { cache: 'no-store' }
+        );
+        if (!res.ok) throw new Error('fetch daily-energy failed');
+
+        const json = await res.json();
+        const arr = Array.isArray(json.data) ? json.data : [];
+        if (!arr.length) return;
+
+        const getP = r => Number(r.active_power ?? r.power ?? NaN);
+        let min = { v: Infinity, ts: null };
+        let max = { v: -Infinity, ts: null };
+
+        for (const r of arr) {
+          const v = getP(r);
+          if (!Number.isFinite(v)) continue;
+          const ts = r.timestamp || r.time || r.ts;
+          if (v < min.v) min = { v, ts };
+          if (v > max.v) max = { v, ts };
+        }
+
+        // อัปเดตการ์ด
+        document.getElementById("power-min-today").textContent =
+          Number.isFinite(min.v) ? min.v.toFixed(2) : "-";
+        document.getElementById("power-max-today").textContent =
+          Number.isFinite(max.v) ? max.v.toFixed(2) : "-";
+
+        const todayStr = formatYMDwithOffset(new Date(), TZ_OFFSET_HOURS);
+        const notifiedKey = `extremaNotified_${dateStr}`;
+        let already = {};
+
+        // ถ้าเป็น "วันนี้" และยังไม่เคยล้างสถานะ ให้ล้างครั้งเดียวตอนเริ่ม
+        if (dateStr === todayStr && !sessionStorage.getItem('__extrema_cleared_today')) {
+          localStorage.removeItem(notifiedKey);
+          sessionStorage.setItem('__extrema_cleared_today', '1');
+        } else {
+          already = JSON.parse(localStorage.getItem(notifiedKey) || "{}");
+        }
+
+        if (Number.isFinite(max.v) && max.ts && already.max !== max.v) {
+          addInAppAlert("max", `New max power: ${max.v.toFixed(2)} kW`, max.ts, dateStr);
+          already.max = max.v;
+        }
+        if (Number.isFinite(min.v) && min.ts && already.min !== min.v) {
+          addInAppAlert("min", `New min power: ${min.v.toFixed(2)} kW`, min.ts, dateStr);
+          already.min = min.v;
+        }
+        localStorage.setItem(notifiedKey, JSON.stringify(already));
+
+        alertFilterDayKey = dateStr;
+        renderAlertList(dateStr);
+      } catch (e) {
+        console.error("showDailyExtremaAlerts failed:", e);
+      }
+    }
+
+
+    function checkAbnormalValues(data) {
+      const { voltage, current, power } = data;
+      const rules = ALERT_RULES;
+
+      if (voltage < rules.voltage.min || voltage > rules.voltage.max) {
+        addInAppAlert('anom', `⚠️ Voltage out of range: ${voltage.toFixed(1)} V`);
+        showSystemNotification('⚠️ Voltage Alert', `${voltage.toFixed(1)} V`);
+      }
+
+      if (current < rules.current.min || current > rules.current.max) {
+        addInAppAlert('anom', `⚠️ Current abnormal: ${current.toFixed(1)} A`);
+        showSystemNotification('⚠️ Current Alert', `${current.toFixed(1)} A`);
+      }
+
+      if (power < rules.power.min || power > rules.power.max) {
+        addInAppAlert('anom', `⚠️ Power abnormal: ${power.toFixed(1)} W`);
+        showSystemNotification('⚠️ Power Alert', `${power.toFixed(1)} W`);
       }
     }
 
@@ -1632,6 +1741,7 @@
 
     function setupNotifications() {
       // โหลดประวัติเดิม
+      alertFilterDayKey = dayKeyFromDate(new Date());
       loadInAppAlerts();
       renderAlertList();
       // ปุ่มกระดิ่ง
@@ -1682,6 +1792,48 @@
 
 
     }
+    function checkSpike1m(buildingId, powerKW) {
+      const cfg = ALERT_RULES.spike1m;
+      if (!cfg?.enabled) return;
+      if (!Number.isFinite(powerKW) || powerKW < 0) return;
+
+      const prev = lastPowerByBuilding[buildingId];
+      lastPowerByBuilding[buildingId] = powerKW;
+      if (!Number.isFinite(prev)) return; // ยังไม่มีค่าก่อนหน้า
+
+      const delta = powerKW - prev;
+      const absDelta = Math.abs(delta);
+
+      // --- โหมดแจ้งเตือนกระดิกนิดเดียว ---
+      const tinyHit = cfg.tiny?.enabled && absDelta >= (cfg.tiny.epsKW ?? 0);
+
+      // --- เกณฑ์เดิม (อยากปิดก็ใส่ 0 ตาม config ข้างบน) ---
+      const pct = prev !== 0 ? ((delta / prev) * 100) : null;
+      const pctHit = (cfg.pct > 0 && prev > 0) ? Math.abs(pct) >= cfg.pct : false;
+      const absHit = (cfg.deltaKW > 0) ? absDelta >= cfg.deltaKW : false;
+
+      let shouldNotify = tinyHit || pctHit || absHit;
+
+      // ไม่เอาแจ้งเตือนลง ถ้าปิด
+      if (!cfg.includeDown && delta < 0) shouldNotify = false;
+
+      // กันเด้งถี่
+      if (shouldNotify && cfg.cooldownSec) {
+        const now = Date.now();
+        const last = lastSpikeAt[buildingId] || 0;
+        if (now - last < cfg.cooldownSec * 1000) shouldNotify = false;
+        else lastSpikeAt[buildingId] = now;
+      }
+
+      if (!shouldNotify) return;
+
+      const arrow = delta >= 0 ? '↑' : '↓';
+      const msg = `Power ${arrow} ${prev.toFixed(3)} → ${powerKW.toFixed(3)} kW (Δ ${absDelta.toFixed(3)} kW${pct != null ? `, ${pct.toFixed(1)}%` : ''}) (B${buildingId})`;
+      addInAppAlert('anom', msg);
+      showSystemNotification('Power change (1-min)', msg);
+      console.log('[1m-change]', { prev, power: powerKW, delta, absDelta, pct });
+    }
+
 
 
 
@@ -1697,44 +1849,56 @@
       return avg;
     }
     function checkAnomaly(buildingId, point) {
-      const power = (point.active_power ?? point.power) ?? null;
-      const voltage = point.voltage ?? null;
-      const current = point.current ?? null;
-      const tsText = new Date(last.timestamp).toLocaleString();
-      console.log(
-        `[RT] ${tsText} | P=${_fmt(power)} kW` +
-        (voltage != null ? `, V=${_fmt(voltage)} V` : '') +
-        (current != null ? `, I=${_fmt(current)} A` : '')
-      );
+      const power = Number(point.active_power ?? point.power);
+      const voltage = Number(point.voltage);
+      const current = Number(point.current);
+      const ts = point?.timestamp ? new Date(point.timestamp) : new Date();
+      const tsText = ts.toLocaleString();
 
-      // 1) ช่วงแรงดันหลุด
-      if (typeof voltage === 'number' && (voltage < ALERT_RULES.voltageRange.min || voltage > ALERT_RULES.voltageRange.max)) {
+      // 1) แรงดันหลุดช่วง (ถ้ามีการตั้งค่าช่วงไว้)
+      const vr = ALERT_RULES?.voltageRange;
+      if (vr && Number.isFinite(voltage) && (voltage < vr.min || voltage > vr.max)) {
         const msg = `Voltage out of range: ${voltage.toFixed(0)} V (Building ${buildingId})`;
-        addInAppAlert('anom', msg);
+        addInAppAlert('anom', msg, point?.timestamp);          // ผูก alert กับวันที่ของจุดข้อมูล
         showSystemNotification('Voltage anomaly', msg);
       }
 
-      // 2) กระแสเกิน
-      if (typeof current === 'number' && current > ALERT_RULES.currentMax) {
+      // log แบบปลอดภัย (ไม่ใช้ _fmt)
+      console.log(
+        `[RT] ${tsText} | P=${Number.isFinite(power) ? power.toFixed(2) : '-'} kW` +
+        (Number.isFinite(voltage) ? `, V=${voltage.toFixed(0)} V` : '') +
+        (Number.isFinite(current) ? `, I=${current.toFixed(1)} A` : '')
+      );
+
+      // 2) กระแสเกิน (ถ้ามีการตั้ง max)
+      if (Number.isFinite(current) && Number.isFinite(ALERT_RULES?.currentMax) && current > ALERT_RULES.currentMax) {
         const msg = `Current high: ${current.toFixed(1)} A (Building ${buildingId})`;
-        addInAppAlert('anom', msg);
+        addInAppAlert('anom', msg, point?.timestamp);
         showSystemNotification('Current anomaly', msg);
       }
 
-      // 3) Power spike vs moving average (5 นาที)
-      if (typeof power === 'number' && power > 0) {
-        const avg = updateMovingBuffer(buildingId, power);
-        if (avg > 0) {
-          const pct = ((power - avg) / avg) * 100;
+      // 3) Power spike เทียบกับค่าเฉลี่ย "ก่อนหน้า"
+      if (Number.isFinite(power) && power > 0) {
+        const avgPrev = updateMovingBuffer(buildingId, power); // ค่าเฉลี่ยของค่าเดิม (ก่อนหน้า)
+        if (avgPrev > 0 && Number.isFinite(ALERT_RULES?.powerSpikePct)) {
+          const pct = ((power - avgPrev) / avgPrev) * 100;
+          console.log('[spike-check]', {
+            power: +power.toFixed(3), avg: +avgPrev.toFixed(3), pct: +pct.toFixed(0)
+          });
           if (pct >= ALERT_RULES.powerSpikePct) {
             const msg = `Power spike +${pct.toFixed(0)}% → ${power.toFixed(2)} kW (Building ${buildingId})`;
-            addInAppAlert('anom', msg);
+            addInAppAlert('anom', msg, point?.timestamp);
             showSystemNotification('Power spike', msg);
           }
         }
       }
 
+      // 4) ตรวจการเปลี่ยนแปลงรายนาทีแบบเร็ว (ถ้าตั้งค่าไว้)
+      if (Number.isFinite(power) && power >= 0) {
+        checkSpike1m(buildingId, power);
+      }
     }
+
 
     function refreshPowerExtremaBadges() {
       const { min, max } = __readExtrema(todayKey());
@@ -2168,6 +2332,11 @@
       }
 
       updateDateDisplay();
+
+      const dateStr = formatYMDwithOffset(currentDate, TZ_OFFSET_HOURS);
+      alertFilterDayKey = dateStr;      // ให้ panel กรองตามวันใหม่
+      renderAlertList();                // รีเฟรช panel
+      loadPowerExtremaCard(dateStr);    // โหลด extrema ของวันใหม่
       refreshAllData();
     }
 
@@ -2205,6 +2374,10 @@
       fetchHistoricalDataForDate(1, 'Clinic', selectedDate);
       updateChartDateDisplay(1, selectedDate);
       fetchBillData(1, 'daily', 'Clinic', selectedDate);
+
+      alertFilterDayKey = selectedDate; // กรอง panel ตามวันเลือก
+      renderAlertList();                // รีเฟรช panel
+      loadPowerExtremaCard(selectedDate);
 
       closeModal();
     }
@@ -2496,9 +2669,13 @@
 
       const today = todayKey();
       document.getElementById('datePicker').setAttribute('max', today);
-
       // Load initial data
       refreshAllData();
+
+      const todayStr = formatYMDwithOffset(new Date(), TZ_OFFSET_HOURS);
+      alertFilterDayKey = todayStr;
+      loadPowerExtremaCard(todayStr);
+      renderAlertList(today);
 
       // Update bill data every minute (only for monthly/yearly, not daily as it's calculated from chart data)
       setInterval(() => {

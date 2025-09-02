@@ -42,14 +42,7 @@ const clinic = new mongoose.Schema({
     voltage: Number,
     current: Number,
     power: Number,
-    active_power_phase_a: Number,
-    active_power_phase_b: Number,
-    active_power_phase_c: Number,
-    voltage1: Number,
-    voltage2: Number,
-    voltage3: Number,
-    voltageln: Number,
-    voltagell: Number,
+
     timestamp: { type: Date, default: () => new Date(Date.now() + (7 * 60 * 60 * 1000)) },
 });
 
@@ -114,6 +107,7 @@ const hospital_schema = new mongoose.Schema({
 
 
 const hospital_power = mongoose.model("hospital_power", hospital_schema);
+
 
 
 // 👉 POST /api/sensor
@@ -330,6 +324,47 @@ app.post("/sensorHospital", async (req, res) => {
 
 app.get("/", (req, res) => {
     res.send("Hello from Firebase Cloud Functions!");
+});
+
+app.get("/clinic/daily-extremes", async (req, res) => {
+    try {
+        const { date } = req.query;
+
+        if (!date) {
+            return res.status(400).json({ message: "Missing date query parameter (YYYY-MM-DD)" });
+        }
+
+        const start = new Date(`${date}T00:00:00Z`);
+        const end = new Date(`${date}T23:59:59Z`);
+
+        const results = await clinic_power.aggregate([
+            {
+                $match: {
+                    timestamp: {
+                        $gte: start,
+                        $lte: end,
+                    },
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    minPower: { $min: "$power" },
+                    maxPower: { $max: "$power" },
+                },
+            },
+        ]);
+
+        if (!results.length) {
+            return res.json({ date, minPower: null, maxPower: null });
+        }
+
+        const { minPower, maxPower } = results[0];
+        res.json({ date, minPower, maxPower });
+    } catch (err) {
+        console.error("Error in /daily-extremes:", err);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 
