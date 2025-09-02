@@ -1554,25 +1554,23 @@
       toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3500);
     }
 
-    // ---- De-dup helpers ----
-    function getSeenKeyForDay(dayKey) {
-      // แยก seen ตามวัน เพื่อให้ข้ามวันเริ่มนับใหม่
-      return `momaySeen_${dayKey}`;
-    }
-    function readSeenSet(dayKey) {
+    const SEEN_KEY = 'momayAlertsSeen_v1';
+
+    function getSeenSet() {
       try {
-        const raw = localStorage.getItem(getSeenKeyForDay(dayKey));
-        const arr = raw ? JSON.parse(raw) : [];
-        return new Set(arr);
+        const raw = localStorage.getItem(SEEN_KEY);
+        return new Set(raw ? JSON.parse(raw) : []);
       } catch { return new Set(); }
     }
-    function writeSeenSet(dayKey, seenSet) {
-      localStorage.setItem(getSeenKeyForDay(dayKey), JSON.stringify([...seenSet]));
+    function setSeenSet(s) {
+      try { localStorage.setItem(SEEN_KEY, JSON.stringify([...s])); } catch { }
     }
-    function makeAlertId(dayKey, type, message) {
-      // ป้องกัน \n หรือเว้นวรรคแปลกๆทำให้ id ไม่ตรง
-      const msg = (message || '').replace(/\s+/g, ' ').trim();
-      return `${dayKey}|${type}|${msg}`;
+
+    // ใช้ timestamp จริงของเหตุการณ์ + type (+ value ถ้ามี) ทำเป็น id คงที่
+    function makeAlertId(type, whenTs, payload) {
+      const atISO = new Date(whenTs || Date.now()).toISOString().slice(0, 19); // ถึงวินาทีพอ
+      const val = payload?.value != null ? Number(payload.value).toFixed(2) : '';
+      return `${type}|${atISO}|${val}`;
     }
 
     function updateSoundBtnUI() {
@@ -1594,33 +1592,31 @@
     snd.volume = 0.25;
     snd.play().catch(() => { /* เงียบถ้าโดนบล็อค */ });
 
-    // แทนที่ฟังก์ชันเดิมทั้งหมด
-    function addInAppAlert(type, message) {
-      const now = new Date();
-      const dayKey = dayKeyFromDate(now); // ⬅️ ใช้วันปัจจุบัน
-      const tsText = now.toLocaleString();
+    function addInAppAlert(type, message, whenTs, payload) {
+      const seen = getSeenSet();
+      const id = makeAlertId(type, whenTs, payload);
 
-      // กันซ้ำด้วย seen-set ต่อวัน
-      const seen = readSeenSet(dayKey);
-      const id = makeAlertId(dayKey, type, message);
-      if (seen.has(id)) {
-        // ซ้ำแล้ว ไม่ต้องเพิ่ม/ไม่ต้องเรนเดอร์ใหม่
-        return;
-      }
+      // ถ้าเคยมีแล้ว ให้จบเลย
+      if (seen.has(id)) return;
 
-      const alert = { type, message, ts: tsText, dayKey, id };
+      const tsObj = new Date(whenTs || Date.now());
+      const tsText = tsObj.toLocaleString();
+      const dayKey = dayKeyFromDate(tsObj, TZ_OFFSET_HOURS);
+
+      const alert = { id, type, message, ts: tsText, dayKey };
+
       inAppAlerts.unshift(alert);
       inAppAlerts = inAppAlerts.slice(0, ALERT_RULES.keepLastAlerts);
 
       // บันทึกทั้งรายการและ seen
       localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
       seen.add(id);
-      writeSeenSet(dayKey, seen);
+      setSeenSet(seen);
 
-      renderAlertList(); // ให้ไปกรองตอน render
-      playAlertSound(type);
+      renderAlertList();
+      playAlertSound?.(type);
     }
-    // ให้ไปกรองตอน render
+
 
 
 
@@ -1662,20 +1658,18 @@
       try {
         const res = await fetch(`https://api-kx4r63rdjq-an.a.run.app/clinic/daily-extremes?date=${dateStr}`);
         const data = await res.json();
-        const { minPower, maxPower } = data;
-        const isToday = dateStr === todayKey();
-        // แสดงใน dashboard
-        document.getElementById("power-max-today").textContent = (maxPower || 0).toFixed(2);
-        document.getElementById("power-min-today").textContent = (minPower || 0).toFixed(2);
+        const { minPower, maxPower, minAt, maxAt } = data;
 
-        if (isToday && Number.isFinite(maxPower) && (window.lastMaxPower == null || maxPower > window.lastMaxPower)) {
-          addInAppAlert('max', `New max power: ${maxPower.toFixed(2)} kW`, /*ts*/ null);
+        document.getElementById("power-max-today").textContent = (maxPower ?? 0).toFixed(2);
+        document.getElementById("power-min-today").textContent = (minPower ?? 0).toFixed(2);
+
+        if (!window.lastMaxPower || maxPower > window.lastMaxPower) {
+          addInAppAlert('max', `New max power: ${maxPower.toFixed(2)} kW`, maxAt, { value: maxPower });
           showSystemNotification('New Max Power!', `${maxPower.toFixed(2)} kW`);
           window.lastMaxPower = maxPower;
         }
-
-        if (isToday && Number.isFinite(minPower) && (window.lastMinPower == null || minPower < window.lastMinPower)) {
-          addInAppAlert('min', `New min power: ${minPower.toFixed(2)} kW`, /*ts*/ null);
+        if (!window.lastMinPower || minPower < window.lastMinPower) {
+          addInAppAlert('min', `New min power: ${minPower.toFixed(2)} kW`, minAt, { value: minPower });
           showSystemNotification('New Min Power!', `${minPower.toFixed(2)} kW`);
           window.lastMinPower = minPower;
         }
@@ -1683,6 +1677,35 @@
         console.error("❌ Failed to load power extremes:", e);
       }
     }
+
+    function dedupeStoredAlerts() {
+      try {
+        const seen = getSeenSet();
+        const arr = JSON.parse(localStorage.getItem('momayAlerts') || '[]');
+
+        const out = [];
+        const used = new Set(); // กันซ้ำในรอบเดียว
+        for (const a of arr) {
+          // ถ้ารายการเก่าไม่มี id (ยุคก่อน), สร้าง id แบบเดิมเพื่อเทียบ
+          const id = a.id || makeAlertId(a.type, a.ts ? new Date(a.ts) : Date.now(), { value: extractValueFromMsg(a.message) });
+          if (seen.has(id) || used.has(id)) continue;
+          a.id = id;
+          out.push(a);
+          used.add(id);
+          seen.add(id);
+        }
+        localStorage.setItem('momayAlerts', JSON.stringify(out));
+        setSeenSet(seen);
+        inAppAlerts = out;
+      } catch { /* เงียบไว้ */ }
+    }
+
+    function extractValueFromMsg(msg = '') {
+      // พอประมาณ: ดึงตัวเลขก่อน 'kW' ถ้ามี
+      const m = msg.match(/([\d.]+)\s*kW/i);
+      return m ? parseFloat(m[1]) : undefined;
+    }
+
     function checkAbnormalValues(data) {
       const { voltage, current, power } = data;
       const rules = ALERT_RULES;
@@ -1752,6 +1775,7 @@
       // โหลดประวัติเดิม
       loadInAppAlerts();
       renderAlertList();
+      dedupeStoredAlerts();
       // ปุ่มกระดิ่ง
       const bell = document.getElementById('notifyBell');
       const panel = document.getElementById('notifyPanel');
@@ -1767,14 +1791,10 @@
       }
       if (clearBtn) {
         clearBtn.addEventListener('click', () => {
-          // ลบเฉพาะรายการของวันปัจจุบันออกจาก inAppAlerts
-          const today = todayKey();
-          inAppAlerts = inAppAlerts.filter(a => a.dayKey !== today);
-          localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
-
-          // ล้าง seen ของวันนี้
-          localStorage.removeItem(getSeenKeyForDay(today));
-
+          inAppAlerts = [];
+          localStorage.setItem('momayAlerts', '[]');
+          // reset seen ด้วย
+          setSeenSet(new Set());
           renderAlertList();
           showToast('Notifications cleared');
         });
@@ -1940,13 +1960,11 @@
       localStorage.setItem(__extremaKeys(dateKey).seeded, '1');
     }
 
-    // เรียกทุกครั้งที่มี "ค่าจุดล่าสุด" ของวันนี้เข้ามา
-    function checkDailyPowerExtrema(buildingId, powerKW) {
+    function checkDailyPowerExtrema(buildingId, powerKW, ts) {
       if (!ALERT_RULES.powerExtrema?.enabled) return;
       if (!(typeof powerKW === 'number' && powerKW > 0)) return;
 
       const dateKey = todayKey();
-      // ให้เด้งเฉพาะ "วันนี้" (ไม่เด้งตอนเปิดดูย้อนหลัง)
       if (dateKey !== (__dayKey || todayKey())) return;
 
       const eps = ALERT_RULES.powerExtrema.epsilonKW ?? 0;
@@ -1958,31 +1976,23 @@
         __writeExtrema(dateKey, 'max', powerKW);
         __markSeeded(dateKey);
         if (!ALERT_RULES.powerExtrema.seedSilence) {
-          addInAppAlert('anom', `New daily MIN power ${powerKW.toFixed(2)} kW (Building ${buildingId})`);
-          showSystemNotification('Daily Power Min', `New min ${powerKW.toFixed(2)} kW (B${buildingId})`);
-          addInAppAlert('peak', `New daily MAX power ${powerKW.toFixed(2)} kW (Building ${buildingId})`);
-          showSystemNotification('Daily Power Max', `New max ${powerKW.toFixed(2)} kW (B${buildingId})`);
+          addInAppAlert('min', `New daily MIN power ${powerKW.toFixed(2)} kW (Building ${buildingId})`, ts);
+          addInAppAlert('max', `New daily MAX power ${powerKW.toFixed(2)} kW (Building ${buildingId})`, ts);
         }
         return;
       }
 
-      // ทำสถิติใหม่
       const newMin = (min == null) || (powerKW <= min - eps);
       const newMax = (max == null) || (powerKW > max + eps);
 
       if (newMin) {
         __writeExtrema(dateKey, 'min', powerKW);
-        addInAppAlert('min', `New daily MIN power ${powerKW.toFixed(2)} kW (Building ${buildingId})`);
-        showSystemNotification('Daily Power Min', `🔻 New min ${powerKW.toFixed(2)} kW (B${buildingId})`);
+        addInAppAlert('min', `New daily MIN power ${powerKW.toFixed(2)} kW (Building ${buildingId})`, ts);
       }
       if (newMax) {
         __writeExtrema(dateKey, 'max', powerKW);
-        addInAppAlert('max', `New daily MAX power ${powerKW.toFixed(2)} kW (Building ${buildingId})`);
-        showSystemNotification('Daily Power Max', `🔺 New max ${powerKW.toFixed(2)} kW (B${buildingId})`);
+        addInAppAlert('max', `New daily MAX power ${powerKW.toFixed(2)} kW (Building ${buildingId})`, ts);
       }
-      if (newMin) console.log(`[MIN] ${new Date().toLocaleString()} -> ${powerKW.toFixed(2)} kW`);
-      if (newMax) console.log(`[MAX] ${new Date().toLocaleString()} -> ${powerKW.toFixed(2)} kW`);
-
     }
 
 
@@ -2478,6 +2488,7 @@
         const last = arr[arr.length - 1];
         const ts = last && last.timestamp;
 
+
         if (ts && window.lastTimestampByBuilding[buildingId] !== ts) {
           window.lastTimestampByBuilding[buildingId] = ts;
           const dataType = currentDataType[buildingId];
@@ -2502,7 +2513,7 @@
           try {
             const p = (last.active_power ?? last.power ?? null); // หน่วยควรเป็น kW
             if (typeof p === 'number') {
-              checkDailyPowerExtrema(buildingId, p);
+              checkDailyPowerExtrema(buildingId, p, ts);
               refreshPowerExtremaBadges();
             }
           } catch (e) { console.error('[notify] extrema error', e); }

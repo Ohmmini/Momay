@@ -326,46 +326,53 @@ app.get("/", (req, res) => {
     res.send("Hello from Firebase Cloud Functions!");
 });
 
+// แนะนำ: มี index ที่ { timestamp: 1, power: 1 }
 app.get("/clinic/daily-extremes", async (req, res) => {
     try {
         const { date } = req.query;
-
-        if (!date) {
-            return res.status(400).json({ message: "Missing date query parameter (YYYY-MM-DD)" });
+        if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            return res.status(400).json({ message: "Missing/invalid date (YYYY-MM-DD)" });
         }
 
+        // ใช้ UTC ล้วนให้ตรงกับที่ client ส่งมาแบบ Z
         const start = new Date(`${date}T00:00:00Z`);
-        const end = new Date(`${date}T23:59:59Z`);
+        const end = new Date(`${date}T23:59:59.999Z`);
 
-        const results = await clinic_power.aggregate([
+        const [r] = await clinic_power.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end } } },
             {
-                $match: {
-                    timestamp: {
-                        $gte: start,
-                        $lte: end,
-                    },
-                },
+                $facet: {
+                    // เอกสารที่ power ต่ำสุด
+                    min: [{ $sort: { power: 1, timestamp: 1 } }, { $limit: 1 }],
+                    // เอกสารที่ power สูงสุด
+                    max: [{ $sort: { power: -1, timestamp: 1 } }, { $limit: 1 }],
+                }
             },
             {
-                $group: {
-                    _id: null,
-                    minPower: { $min: "$power" },
-                    maxPower: { $max: "$power" },
-                },
-            },
+                $project: {
+                    minDoc: { $arrayElemAt: ["$min", 0] },
+                    maxDoc: { $arrayElemAt: ["$max", 0] }
+                }
+            }
         ]);
 
-        if (!results.length) {
-            return res.json({ date, minPower: null, maxPower: null });
+        if (!r || (!r.minDoc && !r.maxDoc)) {
+            return res.json({ date, minPower: null, minAt: null, maxPower: null, maxAt: null });
         }
 
-        const { minPower, maxPower } = results[0];
-        res.json({ date, minPower, maxPower });
+        res.json({
+            date,
+            minPower: r.minDoc ? r.minDoc.power : null,
+            minAt: r.minDoc ? r.minDoc.timestamp : null,
+            maxPower: r.maxDoc ? r.maxDoc.power : null,
+            maxAt: r.maxDoc ? r.maxDoc.timestamp : null,
+        });
     } catch (err) {
-        console.error("Error in /daily-extremes:", err);
+        console.error("Error in /clinic/daily-extremes:", err);
         res.status(500).json({ message: "Server error" });
     }
 });
+
 
 
 app.get("/sensor", async (req, res) => {
