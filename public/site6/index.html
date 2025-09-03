@@ -1787,7 +1787,7 @@
     document.addEventListener('DOMContentLoaded', updateSoundBtnUI);
 
     function addInAppAlert(type, message, whenTs, payload) {
-      const tsObj = new Date(whenTs || Date.now());           // รับ UTC จาก API ได้
+      const tsObj = new Date(whenTs || Date.now());     // ← ดิบ (UTC)
       const dayKey = dayKeyFromDate(tsObj, TZ_OFFSET_HOURS);
 
       const seen = getSeenSet(dayKey);
@@ -1798,8 +1798,9 @@
         id,
         type,
         message,
-        tsRaw: tsObj.toISOString(),       // เก็บดิบ (UTC) เผื่อใช้ในอนาคต
-        tsText: formatPanelTime(tsObj),   // ← แสดงเป็นเวลาไทย (UTC+7)
+        tsRaw: tsObj.toISOString(),   // ดิบ (UTC)
+        originTs: tsObj.getTime(),    // ดิบ (ms)
+        // tsText:  (ตัดทิ้ง ไม่เก็บ)
         dayKey
       };
 
@@ -1813,6 +1814,28 @@
     }
 
 
+    function formatUTC(ts) {
+      const ms =
+        ts instanceof Date ? ts.getTime() :
+          typeof ts === 'number' ? ts :
+            typeof ts === 'string' ? Date.parse(ts) : Date.now();
+
+      return new Date(ms).toLocaleString('en-GB', {
+        timeZone: 'UTC',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+      });
+    }
+
+    function formatUTCShift(ts, shiftHours = 0) {
+      const ms =
+        ts instanceof Date ? ts.getTime() :
+          typeof ts === 'number' ? ts :
+            typeof ts === 'string' ? Date.parse(ts) : Date.now();
+
+      return formatUTC(ms + shiftHours * 3600_000);
+    }
 
 
     // ---------- Helpers (UTC safe) ----------
@@ -1893,8 +1916,8 @@
         const itemCls = itemMap[a.type] || 'item-anom';
         const iconFA = a.type === 'max' ? 'fa-arrow-up' : a.type === 'min' ? 'fa-arrow-down' : 'fa-bolt';
 
-        // ใช้เวลาไทยที่เซฟมา ถ้าไม่มีให้ฟอร์แมตจาก tsRaw
-        const timeStr = a.tsText || formatPanelTime(a.tsRaw || a.ts || Date.now());
+        const baseTs = a.originTs ?? a.tsRaw ?? a.ts ?? Date.now();
+        const timeStr = formatUTCShift(baseTs); // ← ลบ 7 ชั่วโมง ที่เดียว
 
         const div = document.createElement('div');
         div.className = `notify-item ${itemCls}`;
@@ -1931,7 +1954,24 @@
 
       const safe = Number.isFinite(ms) ? ms : Date.now();
       return new Date(safe).toLocaleString('en-GB', {
-        timeZone: 'Asia/Bangkok',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+      });
+    }
+
+    // แสดงเวลาแบบคงที่ (format เป็น UTC) และเลื่อนชั่วโมงได้
+    function formatPanelTime(ts, shiftHours = -7) {
+      const ms =
+        ts instanceof Date ? ts.getTime() :
+          typeof ts === 'number' ? ts :
+            typeof ts === 'string' ? Date.parse(ts) : NaN;
+
+      const base = Number.isFinite(ms) ? ms : Date.now();
+      const shifted = new Date(base + shiftHours * 3600_000); // ← ลบ/บวกชั่วโมงที่นี่
+
+      return shifted.toLocaleString('en-GB', {
+        timeZone: 'UTC',                   // fix ตัวเลขให้ไม่โดน TZ เครื่องอีก
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit',
         hour12: false
