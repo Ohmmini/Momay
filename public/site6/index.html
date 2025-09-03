@@ -910,6 +910,102 @@
       background: linear-gradient(135deg, #f97316, #ef4444);
     }
 
+    /* การ์ด export ให้เป็นกล่องเสมอทุกขนาดจอ */
+    .export-card {
+      background: rgba(255, 255, 255, .95) !important;
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 24px;
+      margin: 20px auto 30px;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .1);
+      border: 1px solid rgba(255, 255, 255, .2);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      isolation: isolate;
+    }
+
+    .export-toggle {
+      width: 100%;
+      border-radius: 16px;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .export-step-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #2d3748;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .step-pill {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      font-size: .75rem;
+      padding: 5px 10px;
+      border-radius: 999px;
+      box-shadow: 0 6px 18px rgba(102, 126, 234, .35);
+    }
+
+    .export-card .export-date-input,
+    .export-card input[type="date"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1rem;
+      text-align: center;
+      background: #fff;
+    }
+
+    .export-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width:640px) {
+      .export-actions {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* สำคัญ: ให้ hidden มีความจำเพาะกว่า และชนะทุกที่ */
+    .hidden {
+      display: none !important;
+    }
+
+    .export-step.hidden {
+      display: none !important;
+    }
+
+    #exportStepDate.hidden,
+    #exportStepAction.hidden {
+      display: none !important;
+    }
+
+    /* Dark mode */
+    @media (prefers-color-scheme:dark) {
+      .export-card {
+        background: rgba(45, 55, 72, .95) !important;
+        border: 1px solid rgba(255, 255, 255, .10);
+      }
+
+      .export-step-title {
+        color: #f7fafc;
+      }
+
+      .export-card input[type="date"] {
+        background: #2d3748;
+        color: #f7fafc;
+        border-color: #718096;
+      }
+    }
+
     /* ---------------- Dark Scheme (ส่วนพื้นหลังหลัก) ---------------- */
     @media (prefers-color-scheme:dark) {
       body {
@@ -1131,44 +1227,12 @@
         right: 8px;
         width: calc(100vw - 16px);
       }
-    }
 
-    /* ---------------- Tablet ---------------- */
-    @media (min-width:768px) and (max-width:1024px) {
-      .dashboard-container {
-        padding: 20px 30px;
-        max-width: 1000px;
-      }
 
-      .main-title {
-        font-size: 2.2rem;
-      }
 
-      .period-tabs {
-        gap: 12px;
-      }
 
-      .metrics-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      }
 
-      .chart-canvas-wrapper {
-        width: 100% !important;
-        height: 300px !important;
-        margin: 0 auto;
-      }
 
-      .btn {
-        padding: 14px 28px;
-        font-size: 1rem;
-      }
-
-      .data-type-dropdown {
-        max-width: none;
-        font-size: .8rem;
-        padding: 8px 12px;
-        height: auto;
-      }
     }
 
     /* ---------------- Misc ---------------- */
@@ -1195,10 +1259,24 @@
       border: 2px solid rgba(255, 255, 255, .7);
       background: transparent;
     }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 
 <body>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
 
   <!-- Authentication Overlay -->
   <div id="authOverlay" class="auth-overlay">
@@ -1369,6 +1447,37 @@
             </div>
           </div>
 
+          <!-- Export Card -->
+          <div class="export-card">
+            <!-- ปุ่มหลัก -->
+            <button class="btn export-toggle" id="exportToggle">
+              <i class="fa-solid fa-file-export"></i>
+              <span>Export Data</span>
+            </button>
+
+            <!-- Step 1: เลือกวัน -->
+            <div id="exportStepDate" class="export-step hidden">
+              <div class="export-step-title">
+                <span class="step-pill">Step 1</span> เลือกวันที่
+              </div>
+              <input type="date" id="expDate" class="export-date-input" />
+            </div>
+
+            <!-- Step 2: ปุ่ม Export (โผล่หลังเลือกวัน) -->
+            <div id="exportStepAction" class="export-step hidden">
+              <div class="export-step-title">
+                <span class="step-pill">Step 2</span> เลือกรูปแบบที่ต้องการ
+              </div>
+              <div class="export-actions">
+                <button class="btn" id="btnExportCSV">
+                  <i class="fa-solid fa-file-csv"></i> Export CSV
+                </button>
+                <button class="btn btn-secondary" id="btnViewJSON">
+                  <i class="fa-solid fa-code"></i> View JSON
+                </button>
+              </div>
+            </div>
+          </div>
 
 
 
@@ -1427,6 +1536,51 @@
   <script>
     const TZ_OFFSET_HOURS = 7; // ถอด TZ ออกให้เป็น UTC ล้วน
 
+    const API_BASE = "https://api-kx4r63rdjq-an.a.run.app";
+
+
+    const $toggle = document.getElementById('exportToggle');
+    const $stepDate = document.getElementById('exportStepDate');
+    const $stepAction = document.getElementById('exportStepAction');
+    const $date = document.getElementById('expDate');
+    const $btnCSV = document.getElementById('btnExportCSV');
+    const $btnJSON = document.getElementById('btnViewJSON');
+
+    // ตั้งค่า default = วันนี้
+    function todayYMD() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    // Flow: กดปุ่มหลัก -> โชว์เลือกวัน
+    $toggle.addEventListener('click', () => {
+      $stepDate.classList.toggle('hidden');
+      $stepAction.classList.add('hidden');
+      if (!$date.value) $date.value = todayYMD();
+    });
+
+    // เลือกวันแล้ว -> โชว์ปุ่ม Export
+    $date.addEventListener('change', () => {
+      $stepAction.classList.remove('hidden');
+    });
+
+    // Helper เอาวันที่ใน input
+    function getDateStr() {
+      return $date.value || todayYMD();
+    }
+
+    // ปุ่ม Export
+    $btnCSV.addEventListener('click', () => {
+      const d = getDateStr();
+      window.open(`${API_BASE}/clinic/export-daily-csv/${d}`, '_blank');
+    });
+    $btnJSON.addEventListener('click', () => {
+      const d = getDateStr();
+      window.open(`${API_BASE}/clinic/export-daily-json/${d}`, '_blank');
+    });
     // Authentication System
     const ACCESS_CODE = "240124"; // รหัสผ่าน
     let rememberMe = false;
@@ -1449,13 +1603,41 @@
     let maxPowerByDate = {};
 
     const ALERT_RULES = {
-      voltage: { min: 200, max: 250 },   // ปกติอยู่ในช่วง 220-240V
-      current: { min: 0, max: 100 },     // แล้วแต่โหลดที่คาดหวัง
-      power: { min: 0, max: 22000 },   // กำลังสูงสุดตามระบบ
+      voltage: { min: 200, max: 250 },
+      current: { min: 0, max: 100 },
+      power: { min: 0, max: 22000 },
 
-      allowedHours: { start: 8, end: 22 }, // เวลาแจ้งเตือน (เช้า-ค่ำ)
+      // สำหรับกรองช่วงเวลาแจ้งเตือน
+      allowedHours: { start: 0, end: 24 },
       keepLastAlerts: 10,
+
+      // ชี้ endpoint key ให้พวก localStorage ใช้เป็นชื่อ
+      endpointKey: 'Clinic',
+
+      // แจ้งเตือนกระโดดนาที-ต่อ-นาที
+      spike1m: {
+        enabled: true,
+        // ถ้าอยาก “กระดิกนิดเดียวก็บอก” ให้เปิด tiny
+        tiny: { enabled: false, epsKW: 0.05 }, // 0.05 kW
+        // เกณฑ์เดิม (อย่างใดอย่างหนึ่งพอ)
+        pct: 30,          // เปลี่ยนเกิน 30% จากค่าก่อนหน้า
+        deltaKW: 0.6,     // หรือเปลี่ยนเกิน 0.6 kW
+        includeDown: true,
+        cooldownSec: 30
+      },
+
+      // เกณฑ์ spike เทียบค่าเฉลี่ยสั้นๆ (ใช้ใน checkAnomaly)
+      powerSpikePct: 60,     // มากกว่าเฉลี่ยก่อนหน้ากี่ %
+      currentMax: 100,       // เกินถือว่า abnormal
+
+      // ติดตามค่าสูงสุดต่ำสุดรายวัน
+      powerExtrema: {
+        enabled: true,
+        epsilonKW: 0.05,     // ต้องต่างเกินเท่านี้ถึงจะถือว่าเป็น max/min ใหม่
+        seedSilence: true    // ตอน seed ค่าแรกของวัน ไม่ส่งแจ้งเตือน
+      }
     };
+
 
     // =========== Notification Sound (WebAudio) ===========
     let audioCtx = null;
@@ -1532,18 +1714,26 @@
       return formatYMDwithOffset(d, TZ_OFFSET_HOURS); // คืนค่า "YYYY-MM-DD"
     }
 
-    // เก็บ “วันปัจจุบันที่ panel กำลังกรองอยู่”
-    let alertFilterDayKey = dayKeyFromDate(new Date());
-
-    function showSystemNotification(title, body) {
+    function showSystemNotification(title, body, type = 'anom', whenTs) {
       if (notifEnabled && withinNotifyHours()) {
         try { new Notification(title, { body }); } catch { }
       } else {
-        // Fallback toast ในหน้า
         showToast(`${title}: ${body}`);
       }
-      playAlertSound('default');
+
+      const tsNum = whenTs ? new Date(whenTs).getTime() : Date.now();
+
+      // กันซ้ำแบบ “จริง” ด้วย id เดียวกับที่ panel ใช้
+      const id = makeAlertId(type, tsNum, { value: body });
+      if (hasAlertById(id)) return;                // มีแล้ว ไม่ต้องเพิ่มซ้ำ
+
+      addInAppAlert(type, `${title} - ${body}`, tsNum, { value: body });
+      // ไม่ต้อง play เสียงซ้ำ ที่ addInAppAlert จะเล่นให้อยู่แล้ว
     }
+
+
+
+
     let toastTimer;
     function showToast(msg) {
       clearTimeout(toastTimer);
@@ -1554,22 +1744,30 @@
       toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3500);
     }
 
-    const SEEN_KEY = 'momayAlertsSeen_v1';
+    const SEEN_KEY_BASE = 'momayAlertsSeen_v2';
+    const seenKeyForDay = (dayKey) => `${SEEN_KEY_BASE}_${dayKey || todayKey()}`;
 
-    function getSeenSet() {
+    function getSeenSet(dayKey = alertFilterDayKey || todayKey()) {
       try {
-        const raw = localStorage.getItem(SEEN_KEY);
+        const raw = localStorage.getItem(seenKeyForDay(dayKey));
         return new Set(raw ? JSON.parse(raw) : []);
       } catch { return new Set(); }
     }
-    function setSeenSet(s) {
-      try { localStorage.setItem(SEEN_KEY, JSON.stringify([...s])); } catch { }
+    function setSeenSet(s, dayKey = alertFilterDayKey || todayKey()) {
+      try { localStorage.setItem(seenKeyForDay(dayKey), JSON.stringify([...s])); } catch { }
     }
 
-    // ใช้ timestamp จริงของเหตุการณ์ + type (+ value ถ้ามี) ทำเป็น id คงที่
+    // แทนที่ของเดิม
     function makeAlertId(type, whenTs, payload) {
-      const atISO = new Date(whenTs || Date.now()).toISOString().slice(0, 19); // ถึงวินาทีพอ
-      const val = payload?.value != null ? Number(payload.value).toFixed(2) : '';
+      const atISO = new Date(whenTs || Date.now()).toISOString().slice(0, 19);
+      let val = '';
+      if (payload?.value != null) {
+        const m = String(payload.value).match(/-?\d+(\.\d+)?/); // ดึงเลขออกจาก "0.99 kW"
+        if (m) {
+          const num = parseFloat(m[0]);
+          if (Number.isFinite(num)) val = num.toFixed(2);
+        }
+      }
       return `${type}|${atISO}|${val}`;
     }
 
@@ -1588,44 +1786,104 @@
 
     document.addEventListener('DOMContentLoaded', updateSoundBtnUI);
 
-    const snd = new Audio('/sounds/notify-max.mp3');  // ใส่ไฟล์ไว้ใน public/
-    snd.volume = 0.25;
-    snd.play().catch(() => { /* เงียบถ้าโดนบล็อค */ });
-
     function addInAppAlert(type, message, whenTs, payload) {
-      const seen = getSeenSet();
-      const id = makeAlertId(type, whenTs, payload);
-
-      // ถ้าเคยมีแล้ว ให้จบเลย
-      if (seen.has(id)) return;
-
-      const tsObj = new Date(whenTs || Date.now());
-      const tsText = tsObj.toLocaleString();
+      const tsObj = new Date(whenTs || Date.now());           // รับ UTC จาก API ได้
       const dayKey = dayKeyFromDate(tsObj, TZ_OFFSET_HOURS);
 
-      const alert = { id, type, message, ts: tsText, dayKey };
+      const seen = getSeenSet(dayKey);
+      const id = makeAlertId(type, whenTs, payload);
+      if (seen.has(id)) return;
+
+      const alert = {
+        id,
+        type,
+        message,
+        tsRaw: tsObj.toISOString(),       // เก็บดิบ (UTC) เผื่อใช้ในอนาคต
+        tsText: formatPanelTime(tsObj),   // ← แสดงเป็นเวลาไทย (UTC+7)
+        dayKey
+      };
 
       inAppAlerts.unshift(alert);
       inAppAlerts = inAppAlerts.slice(0, ALERT_RULES.keepLastAlerts);
+      try { localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts)); } catch { }
 
-      // บันทึกทั้งรายการและ seen
-      localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
-      seen.add(id);
-      setSeenSet(seen);
-
-      renderAlertList();
+      seen.add(id); setSeenSet(seen, dayKey);
+      renderAlertList(alertFilterDayKey || dayKey);
       playAlertSound?.(type);
     }
 
 
 
 
+    // ---------- Helpers (UTC safe) ----------
+    function parseAsUTC(ts) {
+      if (ts instanceof Date) return ts.getTime();
+      if (typeof ts === 'number') return ts;
+      if (typeof ts === 'string') {
+        const iso = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(ts) ? ts + 'Z' : ts;
+        return new Date(iso).getTime();
+      }
+      return Date.now();
+    }
+
+
+    // แสดงเวลาแบบไม่ให้โดน timezone เครื่องซ้ำ (fix layout ให้เสมอ)
+    function fmtUTC(d) {
+      return d.toLocaleString(undefined, {
+        timeZone: 'UTC',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+      });
+    }
+
+    function pickDisplayTs(tsRawUTC, targetDayKey) {
+      const candHours = [-7, 0, +7, -14, +14];
+      for (const h of candHours) {
+        const d = new Date(tsRawUTC + h * 3600 * 1000);
+        // ใช้ฟังก์ชัน dayKey เดิมของคุณ (ที่อิง TZ_OFFSET_HOURS)
+        const k = dayKeyFromDate(d, TZ_OFFSET_HOURS);
+        if (k === (targetDayKey || todayKey())) {
+          return { display: fmtUTC(d), usedOffset: h };
+        }
+      }
+      // ถ้าไม่เข้า day ใดเลย ให้ fallback เป็น -7 ชั่วโมง
+      const d = new Date(tsRawUTC - 7 * 3600 * 1000);
+      return { display: fmtUTC(d), usedOffset: -7 };
+    }
+
+    function formatTsForNoti(ts) {
+      // ทำงานบนแกนเวลา UTC → เลื่อน -7h → แสดงด้วย timeZone: 'UTC'
+      const tUTC = parseAsUTC(ts);
+      const shifted = new Date(tUTC - 7 * 3600 * 1000);
+      return shifted.toLocaleString(undefined, {
+        timeZone: 'UTC',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+      });
+    }
+
+    function hasAlertById(id) {
+      try {
+        const arr = JSON.parse(localStorage.getItem('momayAlerts') || '[]');
+        return arr.some(a => a.id === id);
+      } catch {
+        return false;
+      }
+    }
+
+    let alertFilterDayKey = null;
+
+
     function renderAlertList(selectedDayKey) {
       const list = document.getElementById('notifyList');
       const panel = document.getElementById('notifyPanel');
       if (!list || !panel) return;
-      const key = todayKey();
-      const rows = inAppAlerts.filter(a => a.dayKey === key);
+
+      const key = selectedDayKey || alertFilterDayKey || todayKey();
+      let rows = inAppAlerts.filter(a => a.dayKey === key);
+      if (!rows.length) rows = inAppAlerts.slice(0, 10);
 
       list.innerHTML = '';
       rows.forEach(a => {
@@ -1635,48 +1893,90 @@
         const itemCls = itemMap[a.type] || 'item-anom';
         const iconFA = a.type === 'max' ? 'fa-arrow-up' : a.type === 'min' ? 'fa-arrow-down' : 'fa-bolt';
 
+        // ใช้เวลาไทยที่เซฟมา ถ้าไม่มีให้ฟอร์แมตจาก tsRaw
+        const timeStr = a.tsText || formatPanelTime(a.tsRaw || a.ts || Date.now());
+
         const div = document.createElement('div');
         div.className = `notify-item ${itemCls}`;
         div.innerHTML =
           `<div class="icon ${iconCls}"><i class="fas ${iconFA}"></i></div>
-       <div><div style="font-weight:600;">${a.message}</div>
-       <div style="opacity:.7;font-size:.8rem;">${a.ts}</div></div>`;
+     <div>
+       <div style="font-weight:600;">${a.message}</div>
+       <div style="opacity:.7;font-size:.8rem;">${timeStr}</div>
+     </div>`;
         list.appendChild(div);
       });
 
-      panel.style.display = rows.length ? 'block' : 'none';
+      panel.style.display = 'block';
 
       const badge = document.getElementById('notifyBadge');
       if (badge) {
-        if (rows.length) { badge.textContent = rows.length; badge.style.display = 'inline-flex'; }
+        const n = rows.length;
+        if (n) { badge.textContent = n; badge.style.display = 'inline-flex'; }
         else { badge.style.display = 'none'; }
+      }
+      if (!rows.length) {
+        list.innerHTML = '<div style="opacity:.7;padding:12px 10px;">No notifications yet</div>';
       }
     }
 
 
+    // ✅ แทนที่ของเดิม
+    // แสดงเวลาไทย (UTC+7) รูปแบบ dd/mm/yyyy, HH:MM:SS
+    function formatPanelTime(ts) {
+      const ms =
+        ts instanceof Date ? ts.getTime() :
+          typeof ts === 'number' ? ts :
+            typeof ts === 'string' ? Date.parse(ts) : NaN;
+
+      const safe = Number.isFinite(ms) ? ms : Date.now();
+      return new Date(safe).toLocaleString('en-GB', {
+        timeZone: 'Asia/Bangkok',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+      });
+    }
+
+
+    // เก็บ max/min แยกตามวัน (ในหน้านี้อย่างเดียวก็พอ)
+    window.__lastExtremaByDate = window.__lastExtremaByDate || {};
+    // ตัวช่วยแปลงเป็น number อย่างปลอดภัย
+    function asNum(v) { const n = Number(v); return Number.isFinite(n) ? n : null; }
+
     async function loadPowerExtremaCard(dateStr) {
       try {
         const res = await fetch(`https://api-kx4r63rdjq-an.a.run.app/clinic/daily-extremes?date=${dateStr}`);
+        if (!res.ok) throw new Error('bad response');
         const data = await res.json();
-        const { minPower, maxPower, minAt, maxAt } = data;
 
-        document.getElementById("power-max-today").textContent = (maxPower ?? 0).toFixed(2);
-        document.getElementById("power-min-today").textContent = (minPower ?? 0).toFixed(2);
+        const minN = asNum(data?.minPower);
+        const maxN = asNum(data?.maxPower);
+        const minAt = data?.minAt;
+        const maxAt = data?.maxAt;
 
-        if (!window.lastMaxPower || maxPower > window.lastMaxPower) {
-          addInAppAlert('max', `New max power: ${maxPower.toFixed(2)} kW`, maxAt, { value: maxPower });
-          showSystemNotification('New Max Power!', `${maxPower.toFixed(2)} kW`);
-          window.lastMaxPower = maxPower;
+        document.getElementById("power-max-today").textContent = (maxN ?? 0).toFixed(2);
+        document.getElementById("power-min-today").textContent = (minN ?? 0).toFixed(2);
+
+        // ทำ id ก่อน เพื่อตรวจว่ามีใน panel แล้วหรือยัง
+        if (maxN != null) {
+          const idMax = makeAlertId('max', maxAt ? new Date(maxAt).getTime() : Date.now(), { value: `${maxN.toFixed(2)} kW` });
+          if (!hasAlertById(idMax)) {
+            showSystemNotification('New Max Power!', `${maxN.toFixed(2)} kW`, 'max', maxAt);
+          }
         }
-        if (!window.lastMinPower || minPower < window.lastMinPower) {
-          addInAppAlert('min', `New min power: ${minPower.toFixed(2)} kW`, minAt, { value: minPower });
-          showSystemNotification('New Min Power!', `${minPower.toFixed(2)} kW`);
-          window.lastMinPower = minPower;
+
+        if (minN != null) {
+          const idMin = makeAlertId('min', minAt ? new Date(minAt).getTime() : Date.now(), { value: `${minN.toFixed(2)} kW` });
+          if (!hasAlertById(idMin)) {
+            showSystemNotification('New Min Power!', `${minN.toFixed(2)} kW`, 'min', minAt);
+          }
         }
       } catch (e) {
         console.error("❌ Failed to load power extremes:", e);
       }
     }
+
 
     function dedupeStoredAlerts() {
       try {
@@ -1726,19 +2026,24 @@
       }
     }
 
+    function formatTimestampWithOffset(whenTs, offsetHours = TZ_OFFSET_HOURS) {
+      const t = (whenTs instanceof Date) ? whenTs.getTime() : Date.parse(whenTs);
+      const ms = Number.isFinite(t) ? t : Date.now();
+      const d = new Date(ms + offsetHours * 3600_000); // UTC → +offset
+      // รูปแบบ 09/04/2025, 11:24:11 (เหมือนเดิมแต่คงที่ที่ +7)
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}, `
+        + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+
     function resetDailyNotifications() {
       __dayKey = todayKey();
       movingBufferByBuilding = {};
       lastTimestampByBuilding = {};
-
-      // ล้าง seen ของวันก่อนหน้า เพื่อไม่ไปทับวันใหม่
-      const yesterday = alertFilterDayKey || todayKey(); // เผื่อกรองอยู่ที่วันก่อน
-      localStorage.removeItem(getSeenKeyForDay(yesterday));
-
-      renderAlertList();
+      setSeenSet(new Set(), __dayKey);                 // ⬅️ เริ่ม seen ใหม่สำหรับวันใหม่
+      renderAlertList(__dayKey);
       showToast('Notifications reset for new day');
     }
-
     function checkDayRollover() {
       const nowKey = todayKey();
       if (__dayKey && nowKey !== __dayKey) {
@@ -1749,22 +2054,20 @@
     function loadInAppAlerts() {
       try {
         const raw = JSON.parse(localStorage.getItem('momayAlerts') || '[]');
-        // ล้างของซ้ำต่อวันจากข้อมูลเดิม
         const byId = new Map();
         for (const a of raw) {
-          const dKey = a.dayKey || dayKeyFromDate(new Date()); // เผื่ออันเก่าไม่มี dayKey
+          const dKey = a.dayKey || dayKeyFromDate(new Date());
           const id = a.id || makeAlertId(dKey, a.type, a.message);
+
+          if (!a.tsRaw) {
+            // กู้จาก id (เป็น ISO UTC แบบไม่มี 'Z')
+            const iso = id?.split?.('|')?.[1];
+            a.tsRaw = iso ? parseAsUTC(iso) : parseAsUTC(a.ts);
+          }
+
           if (!byId.has(id)) byId.set(id, { ...a, dayKey: dKey, id });
         }
-        inAppAlerts = [...byId.values()].sort((x, y) => new Date(y.ts) - new Date(x.ts));
-
-        // sync seen-sets สำหรับ “วันปัจจุบัน” เท่านั้น (วันเก่าไม่จำเป็น)
-        const today = todayKey();
-        const todaySeen = readSeenSet(today);
-        inAppAlerts.filter(a => a.dayKey === today).forEach(a => todaySeen.add(a.id));
-        writeSeenSet(today, todaySeen);
-
-        // บันทึกกลับ
+        inAppAlerts = [...byId.values()].sort((x, y) => (y.tsRaw || 0) - (x.tsRaw || 0));
         localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
       } catch {
         inAppAlerts = [];
@@ -1791,11 +2094,11 @@
       }
       if (clearBtn) {
         clearBtn.addEventListener('click', () => {
-          inAppAlerts = [];
-          localStorage.setItem('momayAlerts', '[]');
-          // reset seen ด้วย
-          setSeenSet(new Set());
-          renderAlertList();
+          const dayKey = alertFilterDayKey || todayKey();
+          inAppAlerts = inAppAlerts.filter(a => a.dayKey !== dayKey);
+          localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts));
+          setSeenSet(new Set(), dayKey);                 // ⬅️ ล้างเฉพาะวัน
+          renderAlertList(dayKey);
           showToast('Notifications cleared');
         });
       }
@@ -1826,46 +2129,38 @@
 
 
     }
-    function checkSpike1m(buildingId, powerKW) {
+    function checkSpike1m(buildingId, powerKW, whenTs) {
       const cfg = ALERT_RULES.spike1m;
       if (!cfg?.enabled) return;
       if (!Number.isFinite(powerKW) || powerKW < 0) return;
 
       const prev = lastPowerByBuilding[buildingId];
       lastPowerByBuilding[buildingId] = powerKW;
-      if (!Number.isFinite(prev)) return; // ยังไม่มีค่าก่อนหน้า
+      if (!Number.isFinite(prev)) return;
 
       const delta = powerKW - prev;
       const absDelta = Math.abs(delta);
 
-      // --- โหมดแจ้งเตือนกระดิกนิดเดียว ---
       const tinyHit = cfg.tiny?.enabled && absDelta >= (cfg.tiny.epsKW ?? 0);
-
-      // --- เกณฑ์เดิม (อยากปิดก็ใส่ 0 ตาม config ข้างบน) ---
       const pct = prev !== 0 ? ((delta / prev) * 100) : null;
       const pctHit = (cfg.pct > 0 && prev > 0) ? Math.abs(pct) >= cfg.pct : false;
       const absHit = (cfg.deltaKW > 0) ? absDelta >= cfg.deltaKW : false;
 
       let shouldNotify = tinyHit || pctHit || absHit;
-
-      // ไม่เอาแจ้งเตือนลง ถ้าปิด
       if (!cfg.includeDown && delta < 0) shouldNotify = false;
 
-      // กันเด้งถี่
       if (shouldNotify && cfg.cooldownSec) {
         const now = Date.now();
         const last = lastSpikeAt[buildingId] || 0;
         if (now - last < cfg.cooldownSec * 1000) shouldNotify = false;
         else lastSpikeAt[buildingId] = now;
       }
-
       if (!shouldNotify) return;
 
       const arrow = delta >= 0 ? '↑' : '↓';
       const msg = `Power ${arrow} ${prev.toFixed(3)} → ${powerKW.toFixed(3)} kW (Δ ${absDelta.toFixed(3)} kW${pct != null ? `, ${pct.toFixed(1)}%` : ''}) (B${buildingId})`;
-      addInAppAlert('anom', msg);
-      showSystemNotification('Power change (1-min)', msg);
-      console.log('[1m-change]', { prev, power: powerKW, delta, absDelta, pct });
+      addInAppAlert('anom', msg, whenTs);
+      showSystemNotification('Power change (1-min)', msg, 'anom', whenTs);
     }
 
 
@@ -1895,36 +2190,30 @@
       );
 
       // ช่วงแรงดัน
-      const vr = ALERT_RULES?.voltage;
+      // 1) Voltage out of range
       if (vr && Number.isFinite(voltage) && (voltage < vr.min || voltage > vr.max)) {
         const msg = `Voltage out of range: ${voltage.toFixed(0)} V (Building ${buildingId})`;
         addInAppAlert('anom', msg, point?.timestamp);
-        showSystemNotification('Voltage anomaly', msg);
+        showSystemNotification('Voltage anomaly', msg, 'anom', point?.timestamp);
       }
 
-      // 2) กระแสเกิน
+      // 2) Current high
       if (Number.isFinite(current) && current > ALERT_RULES.currentMax) {
         const msg = `Current high: ${current.toFixed(1)} A (Building ${buildingId})`;
-        addInAppAlert('anom', msg);
-        showSystemNotification('Current anomaly', msg);
+        addInAppAlert('anom', msg, point?.timestamp);
+        showSystemNotification('Current anomaly', msg, 'anom', point?.timestamp);
       }
-      // 3) Power spike เทียบกับค่าเฉลี่ย "ก่อนหน้า" (ไม่รวมค่านี้)
-      if (Number.isFinite(power) && power > 0) {
-        const avgPrev = updateMovingBuffer(buildingId, power); // คืนค่าเฉลี่ยของของเก่า
-        if (avgPrev != null && avgPrev > 0) {
-          const pct = ((power - avgPrev) / avgPrev) * 100;
-          console.log('[spike-check]', {
-            power: +power.toFixed(3), avg: +avgPrev.toFixed(3), pct: +pct.toFixed(0)
-          });
-          if (pct >= ALERT_RULES.powerSpikePct) {
-            const msg = `Power spike +${pct.toFixed(0)}% → ${power.toFixed(2)} kW (Building ${buildingId})`;
-            addInAppAlert('anom', msg);
-            showSystemNotification('Power spike', msg);
-          }
-        }
+
+      // 3) Power spike vs moving avg
+      if (pct >= ALERT_RULES.powerSpikePct) {
+        const msg = `Power spike +${pct.toFixed(0)}% → ${power.toFixed(2)} kW (Building ${buildingId})`;
+        addInAppAlert('anom', msg, point?.timestamp);
+        showSystemNotification('Power spike', msg, 'anom', point?.timestamp);
       }
+
+      // 4) 1-min change
       if (Number.isFinite(power) && power >= 0) {
-        checkSpike1m(buildingId, power);
+        checkSpike1m(buildingId, power, point?.timestamp);
       }
     }
 
@@ -2221,9 +2510,17 @@
       }
     }
 
+    // ปลอดภัยกับ Date | number | string
     function formatYMDwithOffset(date, offsetHours = 0) {
-      const local = new Date(date.getTime() + offsetHours * 60 * 60 * 1000);
-      return local.toISOString().split('T')[0];
+      const ms =
+        date instanceof Date ? date.getTime() :
+          typeof date === 'number' ? date :
+            typeof date === 'string' ? Date.parse(date) : NaN;
+
+      if (!Number.isFinite(ms)) return new Date().toISOString().slice(0, 10);
+
+      const local = new Date(ms + offsetHours * 3600_000);
+      return local.toISOString().slice(0, 10);
     }
     // คืนค่า key ของวันปัจจุบัน (YYYY-MM-DD)
     function todayKey() {
@@ -2390,9 +2687,9 @@
       updateChartDateDisplay(1, selectedDate);
       fetchBillData(1, 'daily', 'Clinic', selectedDate);
 
-      renderAlertList();
+      alertFilterDayKey = selectedDate;           // ตั้งฟิลเตอร์ก่อน
+      renderAlertList(alertFilterDayKey);         // แล้วค่อย render
       loadPowerExtremaCard(selectedDate);
-      alertFilterDayKey = selectedDate;
 
       closeModal();
     }
@@ -2670,30 +2967,37 @@
 
     // Initialize everything
     function initialize() {
+      localStorage.removeItem('momayAlerts');
+      localStorage.removeItem('momayAlertsSeen_v2_' + (new Date().toISOString().slice(0, 10)));
+
       // Initialize charts
       initializeChart(1);
 
+      __dayKey = todayKey();
+      alertFilterDayKey = todayKey();
+      setSeenSet(new Set(), alertFilterDayKey); // รีเซ็ต seen ของวันนี้ เพื่อให้ใส่ noti ได้
+
       // Set initial date display
       updateDateDisplay();
-
       setupNotifications();
 
-      __dayKey = todayKey();              // เก็บวันตอนเริ่ม
+
+      // เก็บวันตอนเริ่ม
       setInterval(checkDayRollover, 30000);
 
       refreshPowerExtremaBadges();
-
       const today = todayKey();
       document.getElementById('datePicker').setAttribute('max', today);
 
-      // Load initial data
+      requestNotifyPermission();
+      updateSoundBtnUI?.();
       refreshAllData();
 
-      const dateStr = formatYMDwithOffset(currentDate, TZ_OFFSET_HOURS); // ใช้ฟังก์ชันของคุณ
+
+      const dateStr = formatYMDwithOffset(currentDate, TZ_OFFSET_HOURS);
       loadPowerExtremaCard(dateStr);
 
-      alertFilterDayKey = todayKey();     // ✅ กำหนดตัวกรองเป็นวันนี้
-      renderAlertList();
+      renderAlertList(alertFilterDayKey);  // จะได้ฟิลเตอร์ตรงกับวันนี้
 
       // Update bill data every minute (only for monthly/yearly, not daily as it's calculated from chart data)
       setInterval(() => {

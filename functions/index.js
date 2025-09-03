@@ -326,6 +326,337 @@ app.get("/", (req, res) => {
     res.send("Hello from Firebase Cloud Functions!");
 });
 
+// รายวัน (แต่สรุปเป็นรายชั่วโมงภายในวันนั้น) — JSON
+app.get('/clinic/export-daily-json/:date', async (req, res) => {
+    try {
+        const { date } = req.params; // YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            return res.status(400).json({ message: 'Invalid date format. Use YYYY-MM-DD' });
+        }
+
+        const dayStart = new Date(`${date}T00:00:00`);
+        const dayEnd = new Date(`${date}T23:59:59.999`);
+
+        const docs = await clinic_power.aggregate([
+            // เลือกเฉพาะข้อมูลของวันนั้น
+            { $match: { timestamp: { $gte: dayStart, $lte: dayEnd } } },
+
+            // รวมระดับ "รายนาที" ก่อน (กันกรณี 1 นาทีมีหลายเรคอร์ด)
+            {
+                $group: {
+                    _id: { minute: { $dateTrunc: { date: "$timestamp", unit: "minute" } } },
+                    power_minute_sum: { $sum: "$power" },
+                    voltage_minute_avg: { $avg: "$voltage" },
+                    current_minute_avg: { $avg: "$current" }
+                }
+            },
+
+            // แล้วยกมาสรุปเป็น "รายชั่วโมง" (sum ของรายนาที)
+            {
+                $group: {
+                    _id: { hour: { $dateTrunc: { date: "$_id.minute", unit: "hour" } } },
+                    power_hour_sum: { $sum: "$power_minute_sum" },
+                    voltage_hour_avg: { $avg: "$voltage_minute_avg" },
+                    current_hour_avg: { $avg: "$current_minute_avg" }
+                }
+            },
+
+            // จัดรูป + เรียงเวลา
+            {
+                $project: {
+                    _id: 0,
+                    hour_start: "$_id.hour",
+                    power_hour_sum: 1,
+                    voltage_hour_avg: { $ifNull: ["$voltage_hour_avg", null] },
+                    current_hour_avg: { $ifNull: ["$current_hour_avg", null] }
+                }
+            },
+            { $sort: { hour_start: 1 } }
+        ]).toArray();
+
+        res.json({
+            date,
+            granularity: "hourly",
+            hours: docs.length,
+            data: docs
+        });
+    } catch (err) {
+        console.error('export-daily-json hourly error:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+// รายวัน (แต่สรุปเป็นรายชั่วโมงภายในวันนั้น) — CSV
+app.get('/clinic/export-daily-csv/:date', async (req, res) => {
+    try {
+        const { date } = req.params; // YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            return res.status(400).send('Invalid date format. Use YYYY-MM-DD');
+        }
+
+        const dayStart = new Date(`${date}T00:00:00`);
+        const dayEnd = new Date(`${date}T23:59:59.999`);
+
+        const cursor = clinic_power.aggregate([
+            { $match: { timestamp: { $gte: dayStart, $lte: dayEnd } } },
+            {
+                $group: {
+                    _id: { minute: { $dateTrunc: { date: "$timestamp", unit: "minute" } } },
+                    power_minute_sum: { $sum: "$power" },
+                    voltage_minute_avg: { $avg: "$voltage" },
+                    current_minute_avg: { $avg: "$current" }
+                }
+            },
+            {
+                $group: {
+                    _id: { hour: { $dateTrunc: { date: "$_id.minute", unit: "hour" } } },
+                    power_hour_sum: { $sum: "$power_minute_sum" },
+                    voltage_hour_avg: { $avg: "$voltage_minute_avg" },
+                    current_hour_avg: { $avg: "$current_minute_avg" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    hour_start: "$_id.hour",
+                    power_hour_sum: 1,
+                    voltage_hour_avg: { $ifNull: ["$voltage_hour_avg", null] },
+                    current_hour_avg: { $ifNull: ["$current_hour_avg", null] }
+                }
+            },
+            { $sort: { hour_start: 1 } }
+        ]);
+
+        const filename = `clinic_daily_hourly_${date}.csv`;
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        res.write('hour_start,power_hour_sum,voltage_hour_avg,current_hour_avg\n');
+
+        for await (const doc of cursor) {
+            const hourISO = (doc.hour_start instanceof Date) ? doc.hour_start.toISOString() : doc.hour_start;
+            res.write([
+                hourISO,
+                (doc.power_hour_sum ?? ''),
+                (doc.voltage_hour_avg ?? ''),
+                (doc.current_hour_avg ?? '')
+            ].join(',') + '\n');
+        }
+        res.end();
+    } catch (err) {
+        console.error('export-daily-csv hourly error:', err);
+        res.status(500).send('Server error');
+    }
+});
+
+// ================== MONTHLY JSON ==================
+app.get('/clinic/export-monthly-json/:ym', async (req, res) => {
+    try {
+        const parts = String(req.params.ym || '').split('-');
+        const Y = Number(parts[0]);
+        const M = Number(parts[1]);
+        if (!Y || !M || M < 1 || M > 12) {
+            return res.status(400).json({ error: 'ym must be YYYY-MM' });
+        }
+
+        const start = new Date(Date.UTC(Y, M - 1, 1, 0, 0, 0));
+        const end = new Date(Date.UTC(Y, M, 1, 0, 0, 0));
+
+        // ดึงคอลเลกชัน clinic_power (ลองทั้ง app.locals และ Mongoose)
+        const col = (req.app?.locals?.clinicPower)
+            ? req.app.locals.clinicPower
+            : require('mongoose').connection.collection('clinic_power');
+
+        const rows = await col.aggregate([
+            { $match: { timestamp: { $gte: start, $lt: end } } },
+            {
+                $group: {
+                    _id: {
+                        y: { $year: '$timestamp' },
+                        m: { $month: '$timestamp' },
+                        d: { $dayOfMonth: '$timestamp' }
+                    },
+                    // ถ้า power เป็น W ให้เปลี่ยนเป็น: {$sum: {$divide: [{$divide: ['$power',1000]}, 60]}}
+                    energy_kwh: { $sum: { $divide: ['$power', 60] } },
+                    min_power: { $min: '$power' },
+                    max_power: { $max: '$power' },
+                    avg_voltage: { $avg: '$voltage' },
+                    avg_current: { $avg: '$current' }
+                }
+            },
+            { $sort: { '_id.y': 1, '_id.m': 1, '_id.d': 1 } }
+        ]).toArray();
+
+        const pad2 = n => String(n).padStart(2, '0');
+
+        const days = rows.map(r => ({
+            date: `${r._id.y}-${pad2(r._id.m)}-${pad2(r._id.d)}`,
+            energy_kwh: +((r.energy_kwh ?? 0).toFixed(3)),
+            min_power: r.min_power == null ? null : +r.min_power.toFixed(3),
+            max_power: r.max_power == null ? null : +r.max_power.toFixed(3),
+            avg_voltage: r.avg_voltage == null ? null : +r.avg_voltage.toFixed(2),
+            avg_current: r.avg_current == null ? null : +r.avg_current.toFixed(2),
+        }));
+
+        const total_energy_kwh = +days.reduce((s, x) => s + (x.energy_kwh || 0), 0).toFixed(3);
+
+        return res.json({
+            month: `${Y}-${pad2(M)}`,
+            total_energy_kwh,
+            days
+        });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: 'internal error' });
+    }
+});
+
+// ================== MONTHLY CSV ==================
+app.get('/clinic/export-monthly-csv/:ym', async (req, res) => {
+    try {
+        const parts = String(req.params.ym || '').split('-');
+        const Y = Number(parts[0]);
+        const M = Number(parts[1]);
+        if (!Y || !M || M < 1 || M > 12) {
+            return res.status(400).send('ym must be YYYY-MM');
+        }
+
+        const start = new Date(Date.UTC(Y, M - 1, 1, 0, 0, 0));
+        const end = new Date(Date.UTC(Y, M, 1, 0, 0, 0));
+
+        const col = (req.app?.locals?.clinicPower)
+            ? req.app.locals.clinicPower
+            : require('mongoose').connection.collection('clinic_power');
+
+        const rows = await col.aggregate([
+            { $match: { timestamp: { $gte: start, $lt: end } } },
+            {
+                $group: {
+                    _id: {
+                        y: { $year: '$timestamp' },
+                        m: { $month: '$timestamp' },
+                        d: { $dayOfMonth: '$timestamp' }
+                    },
+                    // ถ้า power เป็น W ให้เปลี่ยนเป็น: {$sum: {$divide: [{$divide: ['$power',1000]}, 60]}}
+                    energy_kwh: { $sum: { $divide: ['$power', 60] } },
+                    min_power: { $min: '$power' },
+                    max_power: { $max: '$power' },
+                    avg_voltage: { $avg: '$voltage' },
+                    avg_current: { $avg: '$current' }
+                }
+            },
+            { $sort: { '_id.y': 1, '_id.m': 1, '_id.d': 1 } }
+        ]).toArray();
+
+        const pad2 = n => String(n).padStart(2, '0');
+
+        let csv = 'date,energy_kwh,min_power,max_power,avg_voltage,avg_current\n';
+        rows.forEach(r => {
+            const date = `${r._id.y}-${pad2(r._id.m)}-${pad2(r._id.d)}`;
+            const e = (r.energy_kwh ?? 0).toFixed(3);
+            const minP = r.min_power == null ? '' : r.min_power.toFixed(3);
+            const maxP = r.max_power == null ? '' : r.max_power.toFixed(3);
+            const v = r.avg_voltage == null ? '' : r.avg_voltage.toFixed(2);
+            const c = r.avg_current == null ? '' : r.avg_current.toFixed(2);
+            csv += `${date},${e},${minP},${maxP},${v},${c}\n`;
+        });
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="clinic_month_${Y}-${pad2(M)}.csv"`);
+        return res.send(csv);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).send('internal error');
+    }
+});
+
+// ================== YEARLY JSON ==================
+app.get('/clinic/export-yearly-json/:year', async (req, res) => {
+    try {
+        const Y = Number(req.params.year);
+        if (!Y) return res.status(400).json({ error: 'year must be YYYY' });
+
+        const start = new Date(Date.UTC(Y, 0, 1, 0, 0, 0));
+        const end = new Date(Date.UTC(Y + 1, 0, 1, 0, 0, 0));
+
+        const col = (req.app?.locals?.clinicPower)
+            ? req.app.locals.clinicPower
+            : require('mongoose').connection.collection('clinic_power');
+
+        const rows = await col.aggregate([
+            { $match: { timestamp: { $gte: start, $lt: end } } },
+            {
+                $group: {
+                    _id: { y: { $year: '$timestamp' }, m: { $month: '$timestamp' } },
+                    // ถ้า power เป็น W ให้เปลี่ยนเป็น: {$sum: {$divide: [{$divide: ['$power',1000]}, 60]}}
+                    energy_kwh: { $sum: { $divide: ['$power', 60] } }
+                }
+            },
+            { $sort: { '_id.m': 1 } }
+        ]).toArray();
+
+        const pad2 = n => String(n).padStart(2, '0');
+
+        const months = rows.map(r => ({
+            month: `${r._id.y}-${pad2(r._id.m)}`,
+            energy_kwh: +((r.energy_kwh ?? 0).toFixed(3))
+        }));
+
+        const total_energy_kwh = +months.reduce((s, x) => s + (x.energy_kwh || 0), 0).toFixed(3);
+
+        return res.json({
+            year: String(Y),
+            total_energy_kwh,
+            months
+        });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: 'internal error' });
+    }
+});
+
+// ================== YEARLY CSV ==================
+app.get('/clinic/export-yearly-csv/:year', async (req, res) => {
+    try {
+        const Y = Number(req.params.year);
+        if (!Y) return res.status(400).send('year must be YYYY');
+
+        const start = new Date(Date.UTC(Y, 0, 1, 0, 0, 0));
+        const end = new Date(Date.UTC(Y + 1, 0, 1, 0, 0, 0));
+
+        const col = (req.app?.locals?.clinicPower)
+            ? req.app.locals.clinicPower
+            : require('mongoose').connection.collection('clinic_power');
+
+        const rows = await col.aggregate([
+            { $match: { timestamp: { $gte: start, $lt: end } } },
+            {
+                $group: {
+                    _id: { y: { $year: '$timestamp' }, m: { $month: '$timestamp' } },
+                    // ถ้า power เป็น W ให้เปลี่ยนเป็น: {$sum: {$divide: [{$divide: ['$power',1000]}, 60]}}
+                    energy_kwh: { $sum: { $divide: ['$power', 60] } }
+                }
+            },
+            { $sort: { '_id.m': 1 } }
+        ]).toArray();
+
+        const pad2 = n => String(n).padStart(2, '0');
+
+        let csv = 'month,energy_kwh\n';
+        rows.forEach(r => {
+            csv += `${r._id.y}-${pad2(r._id.m)},${(r.energy_kwh ?? 0).toFixed(3)}\n`;
+        });
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="clinic_year_${Y}.csv"`);
+        return res.send(csv);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).send('internal error');
+    }
+});
+
 // แนะนำ: มี index ที่ { timestamp: 1, power: 1 }
 app.get("/clinic/daily-extremes", async (req, res) => {
     try {
@@ -372,6 +703,55 @@ app.get("/clinic/daily-extremes", async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
+
+// แนะนำ: มี index ที่ { timestamp: 1, power: 1 }
+app.get("/sensorpx_pm3250/daily-extremes", async (req, res) => {
+    try {
+        const { date } = req.query;
+        if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            return res.status(400).json({ message: "Missing/invalid date (YYYY-MM-DD)" });
+        }
+
+        // ใช้ UTC ล้วนให้ตรงกับที่ client ส่งมาแบบ Z
+        const start = new Date(`${date}T00:00:00Z`);
+        const end = new Date(`${date}T23:59:59.999Z`);
+
+        const [r] = await power_px_pm3250.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end } } },
+            {
+                $facet: {
+                    // เอกสารที่ power ต่ำสุด
+                    min: [{ $sort: { power: 1, timestamp: 1 } }, { $limit: 1 }],
+                    // เอกสารที่ power สูงสุด
+                    max: [{ $sort: { power: -1, timestamp: 1 } }, { $limit: 1 }],
+                }
+            },
+            {
+                $project: {
+                    minDoc: { $arrayElemAt: ["$min", 0] },
+                    maxDoc: { $arrayElemAt: ["$max", 0] }
+                }
+            }
+        ]);
+
+        if (!r || (!r.minDoc && !r.maxDoc)) {
+            return res.json({ date, minPower: null, minAt: null, maxPower: null, maxAt: null });
+        }
+
+        res.json({
+            date,
+            minPower: r.minDoc ? r.minDoc.power : null,
+            minAt: r.minDoc ? r.minDoc.timestamp : null,
+            maxPower: r.maxDoc ? r.maxDoc.power : null,
+            maxAt: r.maxDoc ? r.maxDoc.timestamp : null,
+        });
+    } catch (err) {
+        console.error("Error in /clinic/daily-extremes:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 
 
 
@@ -1006,7 +1386,7 @@ let cachedElectricityBillsensorHospital = null;
 let cachedTotalEnergyKwhsensorHospital = null;
 
 // Route สำหรับคำนวณค่าไฟฟ้ารายวัน (ย้อนหลังได้)
-app.get('/daily-bill/sensorHospital', async (req, res) => {
+app.get('/daily-bill/sensorpx_pm3250', async (req, res) => {
     try {
         // 1. ตรวจสอบว่ามีการส่งค่า `date` มาหรือไม่ ถ้าไม่มีให้ใช้วันที่ปัจจุบัน
         const selectedDate = req.query.date ? req.query.date : new Date().toISOString().split('T')[0];
@@ -1014,7 +1394,7 @@ app.get('/daily-bill/sensorHospital', async (req, res) => {
         console.log("Fetching data for date:", selectedDate);
 
         // 2. ใช้ MongoDB Aggregation เพื่อคำนวณพลังงานรวม (kWh) สำหรับวันที่เลือก
-        const aggregationResult = await hospital_power.aggregate([
+        const aggregationResult = await power_px_pm3250.aggregate([
             {
                 $match: {
                     timestamp: {
@@ -1272,6 +1652,53 @@ app.get('/monthly-bill/sensorHospital', async (req, res) => {
     }
 });
 
+// GET /daily-bill/sensorpx_pm3250/:date
+app.get('/daily-bill/sensorpx_pm3250/:date', async (req, res) => {
+    try {
+        const dateStr = req.params.date.trim();
+
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+        }
+
+        // ใช้ UTC ล้วน ๆ
+        const start = new Date(`${dateStr}T00:00:00Z`);
+        const end = new Date(`${dateStr}T23:59:59.999Z`);
+
+        console.log('Daily bill range (UTC):', { start, end });
+
+        const agg = await power_px_pm3250.aggregate([
+            { $match: { timestamp: { $gte: start, $lte: end } } },
+            {
+                $group: {
+                    _id: null,
+                    totalPowerKWsum: { $sum: '$power' },
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        if (!agg.length) {
+            return res.status(404).json({ error: `No data found for ${dateStr}` });
+        }
+
+        const totalEnergyKwh = agg[0].totalPowerKWsum / 60;
+        const electricityBill = Number((totalEnergyKwh * 4.4).toFixed(2));
+
+        res.json({
+            date: dateStr,
+            timezone: 'UTC',
+            samples: agg[0].count,
+            total_energy_kwh: Number(totalEnergyKwh.toFixed(2)),
+            electricity_bill: electricityBill,
+        });
+    } catch (err) {
+        console.error('daily-bill error:', err);
+        res.status(500).json({ error: 'Failed to process data' });
+    }
+});
+
+
 let monthcachedElectricityBillsensorClinic = null;
 let monthcachedTotalEnergyKwhsensorClinic = null;
 
@@ -1404,6 +1831,62 @@ app.get('/monthly-bill/sensorClinic/:month', async (req, res) => {
     }
 });
 
+// --- Monthly: GET /monthly-bill/sensorClinic/:month  (เช่น 2025-08) ---
+app.get('/monthly-bill/sensorpx_pm3250/:month', async (req, res) => {
+    try {
+        const monthStr = String(req.params.month || '').trim(); // 'YYYY-MM'
+
+        // ตรวจรูปแบบ YYYY-MM
+        if (!/^\d{4}-\d{2}$/.test(monthStr)) {
+            return res.status(400).json({ error: 'Invalid month format. Use YYYY-MM' });
+        }
+
+        const [yStr, mStr] = monthStr.split('-');
+        const year = parseInt(yStr, 10);
+        const monthIndex = parseInt(mStr, 10) - 1; // 0..11
+
+        if (monthIndex < 0 || monthIndex > 11) {
+            return res.status(400).json({ error: 'Invalid month. Use 01..12' });
+        }
+
+        // กรอบเวลา UTC: [start, nextMonthStart)
+        const start = new Date(Date.UTC(year, monthIndex, 1, 0, 0, 0, 0));
+        const nextMonthStart = new Date(Date.UTC(year, monthIndex + 1, 1, 0, 0, 0, 0));
+
+        console.log('Monthly bill range (UTC):', { start, endExclusive: nextMonthStart });
+
+        const agg = await power_px_pm3250.aggregate([
+            { $match: { timestamp: { $gte: start, $lt: nextMonthStart } } },
+            {
+                $group: {
+                    _id: null,
+                    totalPowerKWsum: { $sum: '$power' }, // สมมติ power เป็น kW ราย sample
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        if (!agg.length) {
+            return res.status(404).json({ error: `No data found for ${monthStr}` });
+        }
+
+        // แปลง kW ต่อ sample -> kWh (เหมือน daily ที่ใช้ /60)
+        const totalEnergyKwh = agg[0].totalPowerKWsum / 60;
+        const electricityBill = Number((totalEnergyKwh * 4.4).toFixed(2));
+
+        return res.json({
+            month: monthStr,
+            timezone: 'UTC',
+            samples: agg[0].count,
+            total_energy_kwh: Number(totalEnergyKwh.toFixed(2)),
+            electricity_bill: electricityBill,
+        });
+    } catch (err) {
+        console.error('monthly-bill error:', err);
+        return res.status(500).json({ error: 'Failed to process data' });
+    }
+});
+
 let yearcachedElectricityBillsensorClinic = null;
 let yearcachedTotalEnergyKwhsensorClinic = null;
 
@@ -1499,6 +1982,55 @@ app.get('/yearly-bill/sensorClinic/:year', async (req, res) => {
         console.log('Yearly bill range (UTC):', { start, endExclusive: nextYearStart });
 
         const agg = await clinic_power.aggregate([
+            { $match: { timestamp: { $gte: start, $lt: nextYearStart } } },
+            {
+                $group: {
+                    _id: null,
+                    totalPowerKWsum: { $sum: '$power' },
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        if (!agg.length) {
+            return res.status(404).json({ error: `No data found for ${yearStr}` });
+        }
+
+        const totalEnergyKwh = agg[0].totalPowerKWsum / 60;
+        const electricityBill = Number((totalEnergyKwh * 4.4).toFixed(2));
+
+        return res.json({
+            year: yearStr,
+            timezone: 'UTC',
+            samples: agg[0].count,
+            total_energy_kwh: Number(totalEnergyKwh.toFixed(2)),
+            electricity_bill: electricityBill,
+        });
+    } catch (err) {
+        console.error('yearly-bill error:', err);
+        return res.status(500).json({ error: 'Failed to process data' });
+    }
+});
+
+// --- Yearly: GET /yearly-bill/sensorClinic/:year  (เช่น 2025) ---
+app.get('/yearly-bill/sensorpx_pm3250/:year', async (req, res) => {
+    try {
+        const yearStr = String(req.params.year || '').trim(); // 'YYYY'
+
+        // ตรวจรูปแบบ YYYY
+        if (!/^\d{4}$/.test(yearStr)) {
+            return res.status(400).json({ error: 'Invalid year format. Use YYYY' });
+        }
+
+        const year = parseInt(yearStr, 10);
+
+        // กรอบเวลา UTC: [startOfYear, startOfNextYear)
+        const start = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+        const nextYearStart = new Date(Date.UTC(year + 1, 0, 1, 0, 0, 0, 0));
+
+        console.log('Yearly bill range (UTC):', { start, endExclusive: nextYearStart });
+
+        const agg = await power_px_pm3250.aggregate([
             { $match: { timestamp: { $gte: start, $lt: nextYearStart } } },
             {
                 $group: {
