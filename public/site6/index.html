@@ -1688,6 +1688,55 @@
     // ปุ่ม/คลิกครั้งแรกเพื่อ unlock เสียง (เบราว์เซอร์บังคับให้มี user gesture)
     window.addEventListener('pointerdown', unlockAudio, { once: true });
 
+
+    const msg = document.getElementById('msg');
+    const isSecure = location.protocol === 'https:'
+
+    function note(s) { msg.textContent = s }
+
+    function attachOneShotPermissionAsk() {
+      // ขอสิทธิ์ทันทีที่มี user gesture ครั้งแรก
+      const events = ['click', 'keydown', 'touchstart', 'wheel', 'scroll'];
+      const handler = async () => {
+        events.forEach(e => window.removeEventListener(e, handler, { passive: true }));
+        try {
+          const res = await Notification.requestPermission();
+          if (res === 'granted') {
+            note('✅ อนุญาตแล้ว (ทดสอบแจ้งเตือนถูกส่ง)');
+            try { new Notification('เปิดการแจ้งเตือนแล้ว 🎉', { body: 'ขอบคุณที่อนุญาต' }); } catch { }
+          } else if (res === 'denied') {
+            note('❌ คุณกด “บล็อก” แล้ว ต้องไปเปิดใน Site settings ของเบราว์เซอร์');
+          } else {
+            note('ℹ️ ยังไม่เลือก (default)');
+          }
+        } catch (e) {
+          note('ขอสิทธิ์ไม่สำเร็จ: ' + e.message);
+        }
+      };
+      events.forEach(e => window.addEventListener(e, handler, { passive: true, once: true }));
+      note('พร้อมแล้ว: แค่ขยับครั้งแรก (คลิก/กดคีย์/สกรอล) จะเด้งกล่องสิทธิ์ทันที');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!('Notification' in window)) {
+        note('เบราว์เซอร์นี้ไม่รองรับ Notification API');
+        return;
+      }
+      if (!isSecure) {
+        note('ต้องใช้ HTTPS เพื่อขอสิทธิ์');
+        return;
+      }
+
+      const p = Notification.permission; // default | granted | denied
+      if (p === 'default') {
+        attachOneShotPermissionAsk();
+      } else if (p === 'granted') {
+        note('คุณอนุญาตไว้แล้ว ✅');
+      } else if (p === 'denied') {
+        note('คุณเคยบล็อกไว้แล้ว ❌ ไปที่ Site settings เพื่อเปิดใหม่');
+      }
+    });
+
     // ------------------ STATE ------------------
     let notifEnabled = false;
     let lastTimestampByBuilding = {}; // {1: '2025-...'}
@@ -1714,7 +1763,28 @@
       return formatYMDwithOffset(d, TZ_OFFSET_HOURS); // คืนค่า "YYYY-MM-DD"
     }
 
-    function showSystemNotification(title, body, type = 'anom', whenTs) {
+    const NOTI_ICON = "./picture/momay.png";
+    const NOTI_BADGE = "./picture/momay.png";
+
+    function showSystemNotification(title, body, type = 'anom', whenTs, displayDayKey) {
+      const options = {
+        body,
+        icon: NOTI_ICON,
+        badge: NOTI_BADGE,
+        tag: `momay-${type}`,              // รวม noti ซ้ำชนิดเดียวกัน
+        timestamp: whenTs ? new Date(whenTs).getTime() : Date.now(),
+        data: { type, whenTs, displayDayKey }
+      };
+
+      try {
+        // ถ้ามี service worker อยู่แล้วให้ใช้ (ดีกว่า / รองรับ PWA)
+        const reg = ( navigator.serviceWorker?.getRegistration?.()) || null;
+        if (reg)  reg.showNotification(title, options);
+        else new Notification(title, options);
+      } catch {
+        new Notification(title, options);
+      }
+      
       if (notifEnabled && withinNotifyHours()) {
         try { new Notification(title, { body }); } catch { }
       } else {
@@ -1722,13 +1792,11 @@
       }
 
       const tsNum = whenTs ? new Date(whenTs).getTime() : Date.now();
-
-      // กันซ้ำแบบ “จริง” ด้วย id เดียวกับที่ panel ใช้
       const id = makeAlertId(type, tsNum, { value: body });
-      if (hasAlertById(id)) return;                // มีแล้ว ไม่ต้องเพิ่มซ้ำ
+      if (hasAlertById(id)) return;
 
-      addInAppAlert(type, `${title} - ${body}`, tsNum, { value: body });
-      // ไม่ต้อง play เสียงซ้ำ ที่ addInAppAlert จะเล่นให้อยู่แล้ว
+      // ส่ง displayDayKey ลงไป เพื่อผูก noti กับวันเป้าหมายแน่นอน
+      addInAppAlert(type, `${title} - ${body}`, tsNum, { value: body }, displayDayKey);
     }
 
 
@@ -1786,9 +1854,9 @@
 
     document.addEventListener('DOMContentLoaded', updateSoundBtnUI);
 
-    function addInAppAlert(type, message, whenTs, payload) {
-      const tsObj = new Date(whenTs || Date.now());     // ← ดิบ (UTC)
-      const dayKey = dayKeyFromDate(tsObj, TZ_OFFSET_HOURS);
+    function addInAppAlert(type, message, whenTs, payload, overrideDayKey) {
+      const tsObj = new Date(whenTs || Date.now()); // ดิบ (UTC)
+      const dayKey = overrideDayKey || dayKeyFromDate(tsObj); // ← ถ้ามี override ให้ใช้เลย
 
       const seen = getSeenSet(dayKey);
       const id = makeAlertId(type, whenTs, payload);
@@ -1798,17 +1866,16 @@
         id,
         type,
         message,
-        tsRaw: tsObj.toISOString(),   // ดิบ (UTC)
-        originTs: tsObj.getTime(),    // ดิบ (ms)
-        // tsText:  (ตัดทิ้ง ไม่เก็บ)
+        tsRaw: tsObj.toISOString(),
+        originTs: tsObj.getTime(),
         dayKey
       };
 
       inAppAlerts.unshift(alert);
       inAppAlerts = inAppAlerts.slice(0, ALERT_RULES.keepLastAlerts);
       try { localStorage.setItem('momayAlerts', JSON.stringify(inAppAlerts)); } catch { }
-
       seen.add(id); setSeenSet(seen, dayKey);
+
       renderAlertList(alertFilterDayKey || dayKey);
       playAlertSound?.(type);
     }
@@ -2002,14 +2069,13 @@
         if (maxN != null) {
           const idMax = makeAlertId('max', maxAt ? new Date(maxAt).getTime() : Date.now(), { value: `${maxN.toFixed(2)} kW` });
           if (!hasAlertById(idMax)) {
-            showSystemNotification('New Max Power!', `${maxN.toFixed(2)} kW`, 'max', maxAt);
+            showSystemNotification('New Max Power!', `${maxN.toFixed(2)} kW`, 'max', maxAt, dateStr); // ← ใส่ dateStr
           }
         }
-
         if (minN != null) {
           const idMin = makeAlertId('min', minAt ? new Date(minAt).getTime() : Date.now(), { value: `${minN.toFixed(2)} kW` });
           if (!hasAlertById(idMin)) {
-            showSystemNotification('New Min Power!', `${minN.toFixed(2)} kW`, 'min', minAt);
+            showSystemNotification('New Min Power!', `${minN.toFixed(2)} kW`, 'min', minAt, dateStr); // ← ใส่ dateStr
           }
         }
       } catch (e) {

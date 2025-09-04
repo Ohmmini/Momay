@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+
+  <script>
+    const msg = document.getElementById('msg');
+    const isSecure = location.protocol === 'https:' ||
+      ['localhost','127.0.0.1','::1'].includes(location.hostname);
+
+    function note(s){ msg.textContent = s }
+
+    function attachOneShotPermissionAsk(){
+      // ขอสิทธิ์ทันทีที่มี user gesture ครั้งแรก
+      const events = ['click','keydown','touchstart','wheel','scroll'];
+      const handler = async () => {
+        events.forEach(e => window.removeEventListener(e, handler, { passive:true }));
+        try {
+          const res = await Notification.requestPermission();
+          if (res === 'granted') {
+            note('✅ อนุญาตแล้ว (ทดสอบแจ้งเตือนถูกส่ง)');
+            try { new Notification('เปิดการแจ้งเตือนแล้ว 🎉', { body:'ขอบคุณที่อนุญาต' }); } catch {}
+          } else if (res === 'denied') {
+            note('❌ คุณกด “บล็อก” แล้ว ต้องไปเปิดใน Site settings ของเบราว์เซอร์');
+          } else {
+            note('ℹ️ ยังไม่เลือก (default)');
+          }
+        } catch (e) {
+          note('ขอสิทธิ์ไม่สำเร็จ: ' + e.message);
+        }
+      };
+      events.forEach(e => window.addEventListener(e, handler, { passive:true, once:true }));
+      note('พร้อมแล้ว: แค่ขยับครั้งแรก (คลิก/กดคีย์/สกรอล) จะเด้งกล่องสิทธิ์ทันที');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!('Notification' in window)) {
+        note('เบราว์เซอร์นี้ไม่รองรับ Notification API');
+        return;
+      }
+      if (!isSecure) {
+        note('ต้องใช้ HTTPS หรือ localhost/127.0.0.1/::1 เพื่อขอสิทธิ์');
+        return;
+      }
+
+      const p = Notification.permission; // default | granted | denied
+      if (p === 'default') {
+        attachOneShotPermissionAsk();
+      } else if (p === 'granted') {
+        note('คุณอนุญาตไว้แล้ว ✅');
+      } else if (p === 'denied') {
+        note('คุณเคยบล็อกไว้แล้ว ❌ ไปที่ Site settings เพื่อเปิดใหม่');
+      }
+    });
+  </script>
+</body>
+</html>
